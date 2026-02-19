@@ -393,7 +393,7 @@
         "Unit tests verify hash stability"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-024",

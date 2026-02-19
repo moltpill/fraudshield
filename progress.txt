@@ -437,3 +437,22 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - X-RateLimit-Limit/Remaining/Reset headers on all responses
 - Use upsert with increment for atomic counters (no race conditions)
 
+
+
+### STORY-023: Create fingerprint hashing service ✅
+- computeFingerprint(signals) returns stable SHA-256 hash
+- Normalizes signal JSON by sorting object keys recursively
+- Excludes volatile keys: timestamp, requestTime, requestId, sessionId
+- Arrays are NOT sorted (order matters for IP lists)
+- Uses Node.js crypto.createHash for SHA-256
+- 14 tests covering stability, normalization, and volatile exclusion
+- Total: 222 tests passing
+
+**Learning:** When normalizing objects for hashing, sort object keys recursively but preserve array order - arrays often have semantic meaning (e.g., IP discovery order). Use a VOLATILE_KEYS constant list to centralize which fields to exclude.
+
+### STORY-023: Create fingerprint hashing service ✅
+- computeFingerprint(signals) returns stable SHA-256 hash (64-char hex)
+- Normalizes by recursively sorting object keys
+- Preserves array order (semantic meaning for IP lists, etc.)
+- Excludes volatile keys: timestamp, requestTime, requestId, sessionId
+
