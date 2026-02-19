@@ -254,3 +254,37 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Total: 108 tests passing
 
 **Learning:** Intl.DateTimeFormat().resolvedOptions() provides the IANA timezone name (e.g., "America/New_York"), while Date.getTimezoneOffset() returns numeric minutes offset (positive = behind UTC). Combining both gives robust timezone detection for fraud signals.
+
+### STORY-014: Implement timezone and locale signals ✅
+- Returns { timezone, timezoneOffset, locale }
+- Intl.DateTimeFormat().resolvedOptions() gives IANA timezone (e.g., 'America/New_York')
+- Date.getTimezoneOffset() gives numeric minutes offset
+- navigator.language for locale
+
+
+### STORY-015: Implement WebRTC local IP detection ✅
+- getWebRTCIPs() returns array of unique local IP addresses
+- Uses RTCPeerConnection with Google STUN server
+- Creates data channel + offer to trigger ICE gathering
+- Extracts IPs from ICE candidate strings via regex
+- Filters for private IPs only (10.x, 172.16-31.x, 192.168.x, 127.x)
+- 3-second timeout prevents hanging
+- Handles WebRTC disabled/blocked gracefully
+- Cleans up peer connection after detection
+- 8 tests covering all acceptance criteria
+- Total: 116 tests passing
+
+**Learning:** WebRTC IP detection works by creating RTCPeerConnection with STUN, then parsing ICE candidates. Filter for private IPs (10.x, 172.16-31.x, 192.168.x) to detect VPN leaks - public IPs from STUN are not useful for local detection. Always close peer connection to avoid resource leaks.
+
+### STORY-015: Implement WebRTC local IP detection ✅
+- Uses RTCPeerConnection with STUN to trigger ICE candidate gathering
+- ICE candidate format: "candidate:... <ip> <port> typ host"
+- Private IP ranges: 10.x, 172.16-31.x, 192.168.x, 127.x
+- 3s timeout prevents hanging when WebRTC is blocked
+
+### STORY-015: Implement WebRTC local IP detection ✅
+- RTCPeerConnection with STUN (stun.l.google.com:19302)
+- Create data channel → create offer → parse ICE candidates
+- Filter for private IPs only (10.x, 172.16-31.x, 192.168.x, 127.x)
+- 3 second timeout, always close peer connection after
+

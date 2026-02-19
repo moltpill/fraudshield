@@ -273,7 +273,7 @@
         "Returns empty array if no IPs found"
       ],
       "priority": 8,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-016",

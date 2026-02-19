@@ -1,5 +1,7 @@
 // Signal collectors
 export { getCanvasFingerprint } from './signals/canvas'
+export { getBotSignals } from './signals/bot'
+export type { BotSignals } from './signals/bot'
 
 /**
  * FraudShield SDK configuration options
