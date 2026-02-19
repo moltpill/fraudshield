@@ -98,3 +98,32 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 - TierLimit: tier limits and features JSON, seeded for all 5 tiers
 - Test isolation critical — always add beforeEach cleanup when tests create related data
 
+
+### STORY-006: Create API key generation utility ✅
+- Created packages/shared/src/api-key.ts with generateApiKey(), validateApiKey(), getApiKeyType()
+- Format: fs_live_ or fs_test_ prefix + 32 hex chars (16 random bytes)
+- Uses Node's crypto.randomBytes for cryptographic security
+- 10 tests covering generation, uniqueness, and validation
+- Exported from @fraudshield/shared package index
+- Fixed pre-existing test flakiness by adding vitest.config.ts with fileParallelism: false
+- Committed: 7304c40
+
+**Learning:** Vitest runs test files in parallel by default, which causes race conditions with shared database tests. Use `fileParallelism: false` in vitest.config.ts when tests share a database.
+
+### STORY-006: Create API key generation utility ✅
+- generateApiKey('live'|'test') → fs_live_/fs_test_ + 32 hex chars
+- validateApiKey() checks format, getApiKeyType() extracts type
+- Vitest runs files in parallel by default → use fileParallelism: false for shared DB tests
+
+
+### STORY-007: Setup Vitest for monorepo ✅
+- Configured vitest.config.ts with test.projects (modern approach, replaces deprecated vitest.workspace.ts)
+- Each package has its own vitest.config.ts with package-specific settings
+- Root-level tests (tests/workspace.test.ts) included via inline project config
+- Coverage enabled with @vitest/coverage-v8 (v8 provider)
+- pnpm test at root runs all 46 tests across all packages
+- pnpm --filter @fraudshield/shared test runs only shared package tests (16)
+- pnpm --filter @fraudshield/api test runs only api package tests (22)
+- Test scripts added: test, test:watch, test:coverage
+
+**Learning:** vitest.workspace.ts is deprecated in Vitest 3.x. Use test.projects array in vitest.config.ts instead. Inline project configs work for root-level tests.

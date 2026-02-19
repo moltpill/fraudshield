@@ -140,7 +140,7 @@
         "Unit tests for generation and validation"
       ],
       "priority": 6,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-007",
@@ -155,7 +155,7 @@
         "At least one passing test in shared package"
       ],
       "priority": 7,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-008",
