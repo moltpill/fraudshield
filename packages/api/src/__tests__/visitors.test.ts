@@ -6,6 +6,8 @@ import { visitorsRoute } from '../routes/visitors.js'
 const mockVisitor = vi.hoisted(() => ({
   findUnique: vi.fn(),
   findFirst: vi.fn(),
+  findMany: vi.fn(),
+  count: vi.fn(),
 }))
 
 const mockVisitorEvent = vi.hoisted(() => ({
@@ -234,6 +236,217 @@ describe('GET /v1/visitors/:id', () => {
             accountId: 'acc-123',
           },
         }),
+      })
+    )
+  })
+})
+
+describe('GET /v1/visitors', () => {
+  let app: Hono
+
+  const mockApiKey = {
+    id: 'key-123',
+    accountId: 'acc-123',
+    key: 'fs_live_abcd1234567890abcd1234567890ab',
+    name: 'Test Key',
+    status: 'active',
+  }
+
+  const mockAccount = {
+    id: 'acc-123',
+    email: 'test@example.com',
+    name: 'Test Account',
+    tier: 'FREE',
+    status: 'active',
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    // Create fresh app with mock auth middleware
+    app = new Hono()
+    
+    app.use('*', async (c, next) => {
+      c.set('apiKey', mockApiKey as any)
+      c.set('account', mockAccount as any)
+      await next()
+    })
+
+    app.route('/v1', visitorsRoute)
+  })
+
+  it('returns visitors with default pagination (limit 20)', async () => {
+    const now = new Date()
+    const visitors = [
+      { id: 'v-1', fingerprint: 'fp1', firstSeen: now, lastSeen: now, visitCount: 3 },
+      { id: 'v-2', fingerprint: 'fp2', firstSeen: now, lastSeen: now, visitCount: 1 },
+    ]
+
+    mockVisitor.findMany.mockResolvedValue(visitors)
+    mockVisitor.count.mockResolvedValue(2)
+
+    const res = await app.request('/v1/visitors')
+
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    
+    expect(data.visitors).toHaveLength(2)
+    expect(data.total).toBe(2)
+    expect(data.limit).toBe(20)
+    expect(data.offset).toBe(0)
+  })
+
+  it('supports limit and offset pagination', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(50)
+
+    await app.request('/v1/visitors?limit=10&offset=20')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 10,
+        skip: 20,
+      })
+    )
+  })
+
+  it('orders by lastSeen desc by default', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { lastSeen: 'desc' },
+      })
+    )
+  })
+
+  it('scopes visitors to account via events relation', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          events: {
+            some: {
+              apiKey: {
+                accountId: 'acc-123',
+              },
+            },
+          },
+        }),
+      })
+    )
+  })
+
+  it('filters by date range (from/to)', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    const from = '2026-01-01T00:00:00Z'
+    const to = '2026-01-31T23:59:59Z'
+
+    await app.request(`/v1/visitors?from=${from}&to=${to}`)
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          lastSeen: {
+            gte: new Date(from),
+            lte: new Date(to),
+          },
+        }),
+      })
+    )
+  })
+
+  it('filters by risk level (high: score >= 70)', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors?risk=high')
+
+    // High risk: events with riskScore >= 70
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          events: expect.objectContaining({
+            some: expect.objectContaining({
+              riskScore: { gte: 70 },
+            }),
+          }),
+        }),
+      })
+    )
+  })
+
+  it('filters by risk level (medium: score 30-69)', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors?risk=medium')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          events: expect.objectContaining({
+            some: expect.objectContaining({
+              riskScore: { gte: 30, lt: 70 },
+            }),
+          }),
+        }),
+      })
+    )
+  })
+
+  it('filters by risk level (low: score < 30)', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors?risk=low')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          events: expect.objectContaining({
+            some: expect.objectContaining({
+              riskScore: { lt: 30 },
+            }),
+          }),
+        }),
+      })
+    )
+  })
+
+  it('returns total count for pagination', async () => {
+    const visitors = [
+      { id: 'v-1', fingerprint: 'fp1', firstSeen: new Date(), lastSeen: new Date(), visitCount: 1 },
+    ]
+
+    mockVisitor.findMany.mockResolvedValue(visitors)
+    mockVisitor.count.mockResolvedValue(100)
+
+    const res = await app.request('/v1/visitors?limit=1')
+
+    const data = await res.json()
+    expect(data.total).toBe(100)
+    expect(data.visitors).toHaveLength(1)
+  })
+
+  it('caps limit at 100', async () => {
+    mockVisitor.findMany.mockResolvedValue([])
+    mockVisitor.count.mockResolvedValue(0)
+
+    await app.request('/v1/visitors?limit=500')
+
+    expect(mockVisitor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 100,
       })
     )
   })

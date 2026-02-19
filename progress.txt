@@ -477,3 +477,23 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Returns { visitorId, confidence, firstSeen, lastSeen }
 - Confidence: 0.5 new, logarithmic increase up to 0.99 for returning
 
+
+
+### STORY-025: Implement GET /v1/visitors/:id endpoint ✅
+- GET /v1/visitors/:id returns visitor details (id, visitCount, firstSeen, lastSeen)
+- Returns 404 with VISITOR_NOT_FOUND code if not found
+- Scoped to account via Prisma relation filter: events.some.apiKey.accountId
+- ?include=events returns up to 50 recent events (ordered by timestamp desc)
+- Events filtered to account-owned API keys only
+- 7 tests covering: found/not found, scoping, events include/exclude
+- Total: 238 tests passing
+
+**Learning:** To scope resources across relations in Prisma, use findFirst with nested relation filters (e.g., events.some.apiKey.accountId). This is more efficient than fetching all and filtering in code.
+
+### STORY-025: Implement GET /v1/visitors/:id endpoint ✅
+- Returns visitor details (id, visitCount, firstSeen, lastSeen)
+- 404 with VISITOR_NOT_FOUND if not found
+- Scoped to API key's account via events.some.apiKey.accountId filter
+- ?include=events returns up to 50 recent events
+- Use findFirst with nested relation filters for efficient scoping
+

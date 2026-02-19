@@ -423,7 +423,7 @@
         "Supports ?include=events for recent events"
       ],
       "priority": 6,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-026",
