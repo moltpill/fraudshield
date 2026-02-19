@@ -185,7 +185,7 @@
         "Handles canvas not supported gracefully"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-010",
@@ -200,7 +200,7 @@
         "Unit test with mocked WebGL context"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-011",

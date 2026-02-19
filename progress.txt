@@ -158,3 +158,43 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Build output: 656 bytes (well under 10KB target)
 - Use underscore prefix for private fields to satisfy noUnusedLocals
 
+
+
+### STORY-009: Implement canvas fingerprint signal ✅
+- getCanvasFingerprint() in packages/sdk/src/signals/canvas.ts
+- Draws text with emoji (🛡️ 🎨), colored text, and arc shapes
+- Uses djb2 hash on canvas.toDataURL() for consistent fingerprint
+- Returns 'canvas-not-supported' gracefully when canvas unavailable
+- 7 tests covering all acceptance criteria
+- Bundle size: 1.38KB (well under 10KB target)
+- Total: 61 tests passing
+
+**Learning:** Use djb2 hash for simple client-side hashing — fast, deterministic, no dependencies. Canvas fingerprinting works by exploiting rendering differences across browsers/systems.
+
+### STORY-009: Implement canvas fingerprint signal ✅
+- Draws text with emoji, colored text, and arc shapes
+- djb2 hash on canvas.toDataURL() — fast, deterministic, no deps
+- Returns 'canvas-not-supported' when unavailable
+- Bundle: 1.38KB
+
+
+
+### STORY-010: Implement WebGL fingerprint signal ✅
+- getWebGLFingerprint() returns { renderer, vendor, hash }
+- Uses WEBGL_debug_renderer_info extension (constants 0x9245, 0x9246)
+- Falls back to 'unknown' if debug extension unavailable
+- Falls back to 'webgl-not-supported' if no WebGL context
+- Includes shader precision info (vertex/fragment HIGH_FLOAT) in hash
+- djb2 hash function for consistency
+- 8 tests covering all acceptance criteria
+- Bundle: 1.38KB (unchanged from STORY-009)
+- Total: 69 tests passing
+
+**Learning:** WebGL debug extension constants (UNMASKED_VENDOR_WEBGL, UNMASKED_RENDERER_WEBGL) are 0x9245 and 0x9246 respectively — use them directly if debugInfo object doesn't expose them.
+
+### STORY-010: Implement WebGL fingerprint signal ✅
+- Returns { renderer, vendor, hash }
+- Uses WEBGL_debug_renderer_info extension (constants 0x9245, 0x9246)
+- Shader precision included in hash
+- Graceful fallback for missing WebGL/debug extension
+
