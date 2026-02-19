@@ -407,3 +407,11 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Total: 196 tests passing
 
 **Learning:** Use `vi.hoisted()` in Vitest to define mock variables that are referenced inside `vi.mock()` factory functions - the factory is hoisted to top of file, so regular `const` declarations won't be defined yet. Also ensure test API keys match the exact format (32 hex chars) expected by validation regex.
+
+### STORY-021: Implement API key validation middleware ✅
+- Extracts key from Authorization: Bearer fs_* header
+- Validates format, looks up in DB with account relation
+- 401 for invalid/revoked keys, 403 for suspended accounts
+- Attaches apiKey and account to Hono context
+- Use vi.hoisted() when mocks reference variables in factory functions
+
