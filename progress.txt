@@ -300,3 +300,11 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Total: 134 tests passing
 
 **Learning:** Bot detection relies on artifacts left by automation tools. navigator.webdriver is set by WebDriver spec, window.phantom by PhantomJS, and various __selenium_* / __webdriver_* globals by Selenium. Chrome.runtime in non-Chrome browsers indicates environment spoofing. Fake permissions APIs often return synchronous results instead of Promises - real browsers always return Promises from permissions.query().
+
+### STORY-016: Implement bot detection signals ✅
+- webdriver: navigator.webdriver (Selenium/Puppeteer)
+- phantom: window.phantom (PhantomJS)
+- selenium: __selenium_*/__webdriver_* artifacts (12+ checks)
+- chromeRuntime: chrome.runtime in non-Chrome
+- inconsistentPermissions: fake sync permissions API (real returns Promise)
+
