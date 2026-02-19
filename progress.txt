@@ -224,3 +224,21 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Collects userAgent, platform, language, languages, hardwareConcurrency, deviceMemory
 - Includes cookieEnabled, doNotTrack, maxTouchPoints, plugins list
 
+
+
+### STORY-013: Implement screen signals collection ✅
+- getScreenSignals() returns ScreenSignals object with all metrics
+- Includes: width, height, availWidth, availHeight, colorDepth, pixelDepth, devicePixelRatio, orientation
+- Handles iframe restrictions with safeGetScreenProp() wrapper - catches thrown errors
+- Orientation extracted separately - checks for both type and angle properties
+- 8 tests covering all acceptance criteria including error handling
+- Bundle: 1.38KB (unchanged)
+- Total: 100 tests passing
+
+**Learning:** Iframe sandboxing can throw DOMException on screen property access, not just return undefined. Use try/catch wrappers for robust signal collection in embedded contexts.
+
+### STORY-013: Implement screen signals collection ✅
+- Returns width, height, availWidth, availHeight, colorDepth, pixelDepth, devicePixelRatio, orientation
+- safeGetScreenProp() wrapper catches DOMExceptions from iframe sandboxing
+- Iframe sandboxing can throw DOMException on screen access (not just undefined)
+
