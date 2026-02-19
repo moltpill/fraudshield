@@ -395,3 +395,15 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Separate app from server for testability — use app.request() in tests
 - notFound() for 404s, onError() for exceptions
 
+
+### STORY-021: Implement API key validation middleware ✅
+- Middleware extracts Bearer token from Authorization header
+- Validates fs_live_ or fs_test_ prefix + 32 hex chars pattern
+- Database lookup via Prisma with account included
+- 401 for invalid/missing/revoked keys, 403 for suspended accounts
+- Attaches apiKey and account to Hono context via c.set()
+- Uses Prisma singleton pattern for dev hot reload
+- 12 tests covering all acceptance criteria
+- Total: 196 tests passing
+
+**Learning:** Use `vi.hoisted()` in Vitest to define mock variables that are referenced inside `vi.mock()` factory functions - the factory is hoisted to top of file, so regular `const` declarations won't be defined yet. Also ensure test API keys match the exact format (32 hex chars) expected by validation regex.

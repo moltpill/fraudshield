@@ -363,7 +363,7 @@
         "Attaches account and apiKey to context"
       ],
       "priority": 2,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-022",
