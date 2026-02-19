@@ -4,3 +4,29 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 
 ## Phase 1: Foundation
 
+
+## STORY-001: Initialize monorepo with pnpm workspaces ✅
+- Created pnpm-workspace.yaml
+- Created root package.json with workspace scripts
+- Created tsconfig.json with @fraudshield/* path aliases
+- Created package.json for all 5 packages (shared, sdk, api, dashboard, admin)
+- Added .gitignore
+- All 8 tests passing
+- Committed: f02724d
+
+### STORY-001: Initialize monorepo with pnpm workspaces ✅
+- pnpm workspaces auto-create symlinks in packages/*/node_modules — added to .gitignore
+
+
+### STORY-002: Setup shared types package ✅
+- Created Tier enum (FREE, STARTER, GROWTH, SCALE, ENTERPRISE)
+- Created Account type with id, email, name, tier, status, createdAt
+- Created ApiKey type with id, accountId, key, name, status, allowedDomains, createdAt
+- Created Visitor type with id, fingerprint, firstSeen, lastSeen, visits
+- Created VisitorEvent type with id, visitorId, apiKeyId, signals, risk, timestamp
+- Created UsageRecord type with id, accountId, date, count
+- All types exported from index.ts
+- 6 tests passing
+- Committed: 1f742a0
+
+**Learning:** Root tsconfig has `noEmit: true` for type-checking only; packages needing build output must override with `noEmit: false`
