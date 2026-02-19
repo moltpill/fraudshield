@@ -7,3 +7,7 @@ export type {
   VisitorEvent,
   UsageRecord
 } from './types/index.js';
+
+// Utilities
+export { generateApiKey, validateApiKey, getApiKeyType } from './api-key.js';
+export type { ApiKeyType } from './api-key.js';

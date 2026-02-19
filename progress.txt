@@ -73,3 +73,28 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 - VisitorEvent: signals JSON, riskScore, detection flags (isBot, isVpn, isTor, isDatacenter)
 - Prisma must run from package directory containing schema (not project root)
 
+
+
+### STORY-005: Setup Prisma schema for usage tracking ✅
+- Created UsageRecord model with accountId, date, requestCount
+- Unique constraint on accountId + date (for atomic daily tracking)
+- Created TierLimit model with tier (unique), monthlyLimit, features JSON
+- Seed script populates all 5 tiers: FREE (1K), STARTER (10K), GROWTH (100K), SCALE (1M), ENTERPRISE (unlimited)
+- Added usageRecords relation to Account model
+- Fixed test isolation in all test files (beforeEach cleanup)
+- 36 tests passing
+- Committed: ecdcd1a
+
+**Learning:** Test isolation is critical — always add beforeEach cleanup when tests create related data. Adding new relations requires updating cleanup order in existing test files.
+
+### STORY-005: Setup Prisma schema for usage tracking ✅
+- UsageRecord: accountId + date unique constraint, requestCount with default 0
+- TierLimit: tier (unique), monthlyLimit, features JSON
+- Seed via `pnpm db:seed` or `prisma db seed`
+- Test isolation requires cleaning child tables before parents
+
+### STORY-005: Setup Prisma schema for usage tracking ✅
+- UsageRecord: accountId + date unique constraint for daily tracking
+- TierLimit: tier limits and features JSON, seeded for all 5 tiers
+- Test isolation critical — always add beforeEach cleanup when tests create related data
+

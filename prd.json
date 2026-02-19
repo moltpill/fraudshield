@@ -126,7 +126,7 @@
         "Seed script to populate tier limits"
       ],
       "priority": 5,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-006",
