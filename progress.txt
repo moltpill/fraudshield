@@ -456,3 +456,16 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Preserves array order (semantic meaning for IP lists, etc.)
 - Excludes volatile keys: timestamp, requestTime, requestId, sessionId
 
+
+
+### STORY-024: Implement POST /v1/analyze endpoint ✅
+- POST /v1/analyze accepts JSON body with signals object
+- Computes fingerprint hash using computeFingerprint service
+- Uses Prisma upsert to create or update Visitor record (atomic)
+- Creates VisitorEvent with serialized signals JSON
+- Returns visitorId, confidence, firstSeen, lastSeen
+- Confidence calculated with logarithmic scaling: new visitors start at 0.5, returning visitors increase up to 0.99
+- 9 tests covering: request validation, fingerprint computation, visitor upsert, event creation, confidence calculation
+- Total: 231 tests passing
+
+**Learning:** For visitor tracking, use Prisma upsert with increment on visitCount - this atomically handles both new and returning visitors. Confidence scoring should use logarithmic scaling to reflect diminishing certainty gains after many visits.
