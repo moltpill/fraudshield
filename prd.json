@@ -258,7 +258,7 @@
         "Returns locale from navigator.language"
       ],
       "priority": 7,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-015",

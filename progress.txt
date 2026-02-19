@@ -242,3 +242,15 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - safeGetScreenProp() wrapper catches DOMExceptions from iframe sandboxing
 - Iframe sandboxing can throw DOMException on screen access (not just undefined)
 
+
+
+### STORY-014: Implement timezone and locale signals ✅
+- getTimezoneSignals() returns { timezone, timezoneOffset, locale }
+- Uses Intl.DateTimeFormat().resolvedOptions().timeZone for IANA timezone name
+- Uses Date().getTimezoneOffset() for minutes offset from UTC
+- Returns navigator.language for locale
+- Graceful fallbacks when APIs unavailable
+- 8 tests covering all acceptance criteria
+- Total: 108 tests passing
+
+**Learning:** Intl.DateTimeFormat().resolvedOptions() provides the IANA timezone name (e.g., "America/New_York"), while Date.getTimezoneOffset() returns numeric minutes offset (positive = behind UTC). Combining both gives robust timezone detection for fraud signals.
