@@ -469,3 +469,11 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Total: 231 tests passing
 
 **Learning:** For visitor tracking, use Prisma upsert with increment on visitCount - this atomically handles both new and returning visitors. Confidence scoring should use logarithmic scaling to reflect diminishing certainty gains after many visits.
+
+### STORY-024: Implement POST /v1/analyze endpoint ✅
+- Accepts { signals } body, computes SHA-256 fingerprint
+- Upserts Visitor (create or increment visitCount)
+- Creates VisitorEvent with serialized signals
+- Returns { visitorId, confidence, firstSeen, lastSeen }
+- Confidence: 0.5 new, logarithmic increase up to 0.99 for returning
+
