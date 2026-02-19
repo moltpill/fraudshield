@@ -170,7 +170,7 @@
         "Package exports FraudShield class"
       ],
       "priority": 1,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-009",

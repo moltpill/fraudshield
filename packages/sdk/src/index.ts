@@ -1,3 +1,6 @@
+// Signal collectors
+export { getCanvasFingerprint } from './signals/canvas'
+
 /**
  * FraudShield SDK configuration options
  */

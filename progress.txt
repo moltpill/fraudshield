@@ -151,3 +151,10 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Total: 54 tests passing across all packages
 
 **Learning:** Use private fields with underscore prefix (_apiKey) when they'll be used by future methods but aren't yet — satisfies strict mode's noUnusedLocals without disabling the check.
+
+### STORY-008: Create SDK package structure ✅
+- Rollup config for UMD, ESM, and minified bundles
+- FraudShield class with constructor({ apiKey, endpoint? })
+- Build output: 656 bytes (well under 10KB target)
+- Use underscore prefix for private fields to satisfy noUnusedLocals
+
