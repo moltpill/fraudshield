@@ -415,3 +415,17 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - Attaches apiKey and account to Hono context
 - Use vi.hoisted() when mocks reference variables in factory functions
 
+
+
+### STORY-022: Implement usage tracking middleware ✅
+- Middleware increments UsageRecord for account on each request
+- Uses Prisma upsert for atomic create-or-increment (prevents race conditions)
+- Aggregates all daily UsageRecord entries for current month using prisma.aggregate()
+- Returns 429 RATE_LIMIT_EXCEEDED if monthly limit exceeded
+- Includes X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset headers
+- Reset timestamp is Unix epoch seconds of next month start
+- Looks up tier limit from TierLimit table, falls back to 1000 if not found
+- 12 tests covering happy path, rate limiting, headers, and aggregation
+- Total: 208 tests passing
+
+**Learning:** Use Prisma's aggregate() with _sum to sum values across multiple records (not findFirst). For atomicity, use upsert with `increment: 1` in update clause - this prevents race conditions when multiple requests arrive simultaneously.
