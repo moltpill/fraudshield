@@ -8,6 +8,7 @@ import { Hono } from 'hono'
 import type { Context } from 'hono'
 import { prisma } from '../lib/prisma.js'
 import { computeFingerprint } from '../lib/fingerprint.js'
+import { extractClientIp } from '../lib/ip.js'
 
 export const analyzeRoute = new Hono()
 
@@ -81,6 +82,9 @@ analyzeRoute.post('/analyze', async (c: Context) => {
     },
   })
 
+  // Extract client IP from request headers
+  const clientIp = extractClientIp(c.req.raw.headers)
+
   // Create visitor event
   await prisma.visitorEvent.create({
     data: {
@@ -92,6 +96,7 @@ analyzeRoute.post('/analyze', async (c: Context) => {
       isVpn: false, // TODO: Implement VPN detection in future story
       isTor: false, // TODO: Implement Tor detection in future story
       isDatacenter: false, // TODO: Implement datacenter detection in future story
+      ip: clientIp, // Client IP address (IPv4 or IPv6)
     },
   })
 

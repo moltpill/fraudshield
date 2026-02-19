@@ -78,6 +78,7 @@ model VisitorEvent {
   isVpn        Boolean  @default(false)
   isTor        Boolean  @default(false)
   isDatacenter Boolean  @default(false)
+  ip           String?  // Client IP address (IPv4 or IPv6)
   timestamp    DateTime @default(now())
 
   // Relations

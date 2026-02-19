@@ -497,3 +497,44 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - ?include=events returns up to 50 recent events
 - Use findFirst with nested relation filters for efficient scoping
 
+
+### STORY-026: Implement GET /v1/visitors endpoint ✅
+- GET /v1/visitors lists visitors with pagination (limit/offset, capped at 100)
+- Filter by date range (?from=ISO&to=ISO) on lastSeen field
+- Filter by risk level (?risk=high|medium|low) via events relation
+- Risk thresholds: high ≥70, medium 30-69, low <30
+- Returns total count for pagination info
+- Ordered by lastSeen desc by default
+- Scoped to account via events.some.apiKey.accountId filter
+- 10 new tests covering: pagination, ordering, scoping, filters, count
+- Total: 248 tests passing
+
+**Learning:** For list endpoints with risk filtering, merge the risk filter into the existing events.some relation filter to avoid duplicate relation clauses. Use Promise.all for parallel findMany + count queries.
+
+### STORY-026: Implement GET /v1/visitors endpoint ✅
+- Pagination: limit (default 20, max 100) + offset
+- Date filtering: ?from=ISO&to=ISO on lastSeen
+- Risk filtering: ?risk=high|medium|low (≥70, 30-69, <30)
+- Returns total count, ordered by lastSeen desc
+- Use Promise.all for parallel findMany + count queries
+
+
+### STORY-027: Implement GET /v1/usage endpoint ✅
+- GET /v1/usage returns usage statistics for authenticated account
+- Returns: currentMonthUsage, tierLimit, tier, percentageUsed, dailyBreakdown
+- Fetches TierLimit by account.tier for monthly limit
+- Queries UsageRecord for current month (date >= startOfMonth, < startOfNextMonth)
+- Daily breakdown: array of { date: YYYY-MM-DD, count } ordered by date asc
+- Percentage allows >100% to show overage clearly
+- Handles missing tier limit gracefully (defaults to 0)
+- 8 tests covering: usage count, tier limit, percentage, daily breakdown, edge cases
+- Total: 256 tests passing
+
+**Learning:** For month-bounded queries, use startOfMonth and startOfNextMonth with gte/lt (not lte) to avoid timezone edge cases. Use Promise.all for parallel independent queries.
+
+### STORY-027: Implement GET /v1/usage endpoint ✅
+- Returns currentMonthUsage, tierLimit, tier, percentageUsed
+- dailyBreakdown array with { date, count } for each day
+- For month bounds: gte startOfMonth, lt startOfNextMonth (avoids timezone issues)
+- Promise.all for parallel tierLimit + usageRecords queries
+

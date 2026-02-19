@@ -438,7 +438,7 @@
         "Ordered by lastSeen desc by default"
       ],
       "priority": 7,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-027",
@@ -453,7 +453,7 @@
         "Calculated from UsageRecord table"
       ],
       "priority": 8,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-028",
