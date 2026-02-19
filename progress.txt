@@ -219,3 +219,8 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - webkitOfflineAudioContext fallback for Safari
 - Different browser audio stacks = different fingerprints
 
+
+### STORY-012: Implement navigator signals collection ✅
+- Collects userAgent, platform, language, languages, hardwareConcurrency, deviceMemory
+- Includes cookieEnabled, doNotTrack, maxTouchPoints, plugins list
+

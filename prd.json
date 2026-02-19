@@ -230,7 +230,7 @@
         "Unit tests mock navigator object"
       ],
       "priority": 5,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-013",
