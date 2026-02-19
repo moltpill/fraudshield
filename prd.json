@@ -378,7 +378,7 @@
         "Works with Redis for high throughput (optional)"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-023",
