@@ -212,3 +212,10 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Total: 77 tests passing
 
 **Learning:** Audio fingerprinting uses OfflineAudioContext to render audio offline, then extracts the Float32Array channel data. Different browser audio stacks produce slightly different output for the same oscillator/compressor config.
+
+### STORY-011: Implement audio fingerprint signal ✅
+- OfflineAudioContext with oscillator (10kHz triangle) + DynamicsCompressor
+- Extracts Float32Array channel data, hashes with djb2
+- webkitOfflineAudioContext fallback for Safari
+- Different browser audio stacks = different fingerprints
+
