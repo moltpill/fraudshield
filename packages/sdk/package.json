@@ -3,19 +3,36 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/sdk.esm.js",
+  "module": "./dist/sdk.esm.js",
+  "browser": "./dist/sdk.min.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/sdk.min.js",
+      "import": "./dist/sdk.esm.js",
+      "require": "./dist/sdk.umd.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
-    "clean": "rm -rf dist"
+    "build": "rollup -c && tsc --emitDeclarationOnly",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@fraudshield/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.24.0",
+    "tslib": "^2.6.3",
+    "typescript": "^5.6.3",
+    "vitest": "^3.0.5"
   }
 }

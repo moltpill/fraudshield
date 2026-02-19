@@ -127,3 +127,27 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 - Test scripts added: test, test:watch, test:coverage
 
 **Learning:** vitest.workspace.ts is deprecated in Vitest 3.x. Use test.projects array in vitest.config.ts instead. Inline project configs work for root-level tests.
+
+### STORY-007: Setup Vitest for monorepo ✅
+- vitest.workspace.ts deprecated in Vitest 3.x — use test.projects in vitest.config.ts
+- Coverage with @vitest/coverage-v8 provider
+- 46 tests total, all passing
+
+## PHASE 1 COMPLETE ✅
+
+
+---
+## Phase 2: SDK Core
+Started: Thu Feb 19 22:03:19 SAST 2026
+
+
+### STORY-008: Create SDK package structure ✅
+- TypeScript configured with strict mode (tsconfig.json)
+- Rollup config for UMD, ESM, and minified bundles (rollup.config.js)
+- FraudShield class with constructor({ apiKey, endpoint? })
+- Build produces sdk.min.js = 656 bytes (well under 10KB requirement)
+- Package exports FraudShield class with types
+- 8 tests covering constructor, options, and exports
+- Total: 54 tests passing across all packages
+
+**Learning:** Use private fields with underscore prefix (_apiKey) when they'll be used by future methods but aren't yet — satisfies strict mode's noUnusedLocals without disabling the check.
