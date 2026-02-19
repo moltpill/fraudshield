@@ -288,7 +288,7 @@
         "Checks for inconsistent permissions API"
       ],
       "priority": 9,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-017",

@@ -288,3 +288,15 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Filter for private IPs only (10.x, 172.16-31.x, 192.168.x, 127.x)
 - 3 second timeout, always close peer connection after
 
+
+### STORY-016: Implement bot detection signals ✅
+- getBotSignals() returns detection flags object with 5 boolean signals
+- Checks navigator.webdriver (Selenium/Puppeteer detection)
+- Checks window.phantom (PhantomJS)
+- Checks window.__selenium_* artifacts (multiple variants)
+- Checks chrome.runtime in non-Chrome browsers (inconsistent environment)
+- Checks for fake permissions API (sync vs async query detection)
+- 18 tests covering all acceptance criteria
+- Total: 134 tests passing
+
+**Learning:** Bot detection relies on artifacts left by automation tools. navigator.webdriver is set by WebDriver spec, window.phantom by PhantomJS, and various __selenium_* / __webdriver_* globals by Selenium. Chrome.runtime in non-Chrome browsers indicates environment spoofing. Fake permissions APIs often return synchronous results instead of Promises - real browsers always return Promises from permissions.query().
