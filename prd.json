@@ -333,7 +333,7 @@
         "UMD bundle works via script tag"
       ],
       "priority": 12,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-020",

@@ -351,3 +351,28 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - AnalyzeResult type with visitorId, confidence, risk, signals
 - Use 'as const' for literal types, derive union with (typeof X)[keyof typeof X]
 
+
+### STORY-019: Setup SDK build and minification ✅
+- Rollup config with terser for minification and mangling
+- Disabled source maps in dist (sourcemap: false) - not shipped to customers
+- Output: sdk.min.js (UMD minified), sdk.esm.js (ESM), sdk.umd.js (UMD)
+- Build size: ~3.2KB gzipped (well under 8KB target)
+- UMD exposes FraudShield global for script tag usage
+- 12 build tests covering all acceptance criteria
+- Total: 175 tests passing
+
+**Learning:** Set `sourcemap: false` in rollup output config to prevent .map files in dist. Terser `mangle: true` (default) handles variable name mangling. Don't ship source maps to production - they expose source code structure.
+
+### STORY-019: Setup SDK build and minification ✅
+- dist/sdk.min.js minified and mangled
+- Source maps NOT included in dist (security)
+- Build size: 3.2KB gzipped (well under 8KB target)
+- UMD bundle exposes FraudShield global
+
+## PHASE 2 COMPLETE ✅
+
+
+---
+## Phase 3: API Layer
+Started: Thu Feb 19 22:35:47 SAST 2026
+
