@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 
 describe('Prisma Schema - Account and ApiKey', () => {
@@ -10,10 +10,18 @@ describe('Prisma Schema - Account and ApiKey', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
+    // Clean up test data (order matters for foreign keys)
     await prisma.apiKey.deleteMany();
+    await prisma.usageRecord.deleteMany();
     await prisma.account.deleteMany();
     await prisma.$disconnect();
+  });
+
+  beforeEach(async () => {
+    // Clean up between tests for isolation
+    await prisma.apiKey.deleteMany();
+    await prisma.usageRecord.deleteMany();
+    await prisma.account.deleteMany();
   });
 
   it('should create an Account with all required fields', async () => {

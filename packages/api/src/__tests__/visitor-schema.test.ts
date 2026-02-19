@@ -14,8 +14,18 @@ describe('Prisma Schema - Visitor and VisitorEvent', () => {
     await prisma.visitorEvent.deleteMany();
     await prisma.visitor.deleteMany();
     await prisma.apiKey.deleteMany();
+    await prisma.usageRecord.deleteMany();
     await prisma.account.deleteMany();
     await prisma.$disconnect();
+  });
+
+  beforeEach(async () => {
+    // Clean up between tests for isolation (order matters for foreign keys)
+    await prisma.visitorEvent.deleteMany();
+    await prisma.visitor.deleteMany();
+    await prisma.apiKey.deleteMany();
+    await prisma.usageRecord.deleteMany();
+    await prisma.account.deleteMany();
   });
 
   describe('Visitor model', () => {

@@ -13,7 +13,11 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@fraudshield/shared": "workspace:*",
@@ -21,6 +25,7 @@
     "prisma": "^5.22.0"
   },
   "devDependencies": {
+    "tsx": "^4.7.0",
     "vitest": "^3.2.4"
   }
 }

@@ -27,7 +27,8 @@ model Account {
   createdAt DateTime @default(now())
 
   // Relations
-  apiKeys ApiKey[]
+  apiKeys      ApiKey[]
+  usageRecords UsageRecord[]
 
   @@map("accounts")
 }
@@ -87,4 +88,32 @@ model VisitorEvent {
   @@index([apiKeyId])
   @@index([timestamp])
   @@map("visitor_events")
+}
+
+/// Daily usage tracking per account
+model UsageRecord {
+  id           String   @id @default(cuid())
+  accountId    String
+  date         DateTime // Truncated to day for grouping
+  requestCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, date])
+  @@index([accountId])
+  @@index([date])
+  @@map("usage_records")
+}
+
+/// Tier limits configuration
+model TierLimit {
+  id           String @id @default(cuid())
+  tier         String @unique // FREE, STARTER, GROWTH, SCALE, ENTERPRISE
+  monthlyLimit Int    // Max requests per month
+  features     String // JSON stored as string for SQLite
+
+  @@map("tier_limits")
 }

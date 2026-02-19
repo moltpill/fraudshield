@@ -53,3 +53,23 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 - Prisma 5 is stable; Prisma 7 has breaking changes
 - allowedDomains stored as JSON string (parse at app level)
 
+
+
+### STORY-004: Setup Prisma schema for visitors and events ✅
+- Created Visitor model with fingerprint (unique), firstSeen, lastSeen, visitCount
+- Created VisitorEvent model with signals (JSON string), riskScore, detection flags (isBot, isVpn, isTor, isDatacenter)
+- Index on Visitor.fingerprint for fast lookup
+- Index on VisitorEvent.timestamp for time-based queries
+- Index on VisitorEvent.visitorId and apiKeyId for relation lookups
+- Relations: VisitorEvent → Visitor (cascade delete), VisitorEvent → ApiKey (cascade delete)
+- Added visitorEvents relation to ApiKey model
+- 8 tests covering creation, constraints, relations, and index usage
+- Committed: 225fa17
+
+**Learning:** Prisma needs to run from the package directory containing the schema, or use pnpm workspace scripts
+
+### STORY-004: Setup Prisma schema for visitors and events ✅
+- Visitor: fingerprint (unique+indexed), firstSeen, lastSeen, visitCount
+- VisitorEvent: signals JSON, riskScore, detection flags (isBot, isVpn, isTor, isDatacenter)
+- Prisma must run from package directory containing schema (not project root)
+
