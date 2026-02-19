@@ -376,3 +376,22 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 ## Phase 3: API Layer
 Started: Thu Feb 19 22:35:47 SAST 2026
 
+
+### STORY-020: Setup Hono API with basic structure ✅
+- Hono app exported from app.ts (separates from server startup)
+- index.ts uses @hono/node-server for Node.js runtime
+- CORS middleware with origin: '*' for dev
+- Request logging middleware logs: method, path, status, duration
+- notFound() handler returns { error, code: 'NOT_FOUND' }
+- onError() handler returns { error, code: 'INTERNAL_ERROR' }
+- 9 new tests, total: 184 tests passing
+
+**Learning:** Separate app definition (app.ts) from server startup (index.ts) for testability. Hono's app.request() method enables easy testing without starting actual server. Use notFound() for 404s, onError() for exceptions.
+
+
+### STORY-020: Setup Hono API with basic structure ✅
+- /health endpoint returns { status: 'ok', timestamp }
+- CORS for all origins (dev), JSON error handling, request logging
+- Separate app from server for testability — use app.request() in tests
+- notFound() for 404s, onError() for exceptions
+
