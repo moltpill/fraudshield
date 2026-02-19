@@ -1,0 +1,15 @@
+{
+  "name": "@fraudshield/dashboard",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev -p 3002",
+    "start": "next start -p 3002",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "@fraudshield/shared": "workspace:*"
+  }
+}

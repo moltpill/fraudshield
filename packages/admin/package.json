@@ -1,0 +1,15 @@
+{
+  "name": "@fraudshield/admin",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev -p 3003",
+    "start": "next start -p 3003",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "@fraudshield/shared": "workspace:*"
+  }
+}

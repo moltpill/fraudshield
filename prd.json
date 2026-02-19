@@ -1,0 +1,1027 @@
+{
+  "name": "fraudshield",
+  "description": "Browser fingerprinting & device intelligence SDK for fraud detection",
+  "branchName": "feature/fraudshield-mvp",
+  "phases": [
+    {
+      "id": "PHASE-1",
+      "name": "Foundation",
+      "description": "Project setup, database schema, core types",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-2",
+      "name": "SDK Core",
+      "description": "Client-side signal collection SDK",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-3",
+      "name": "API Layer",
+      "description": "Backend API endpoints and fingerprint processing",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-4",
+      "name": "Customer Dashboard",
+      "description": "User-facing dashboard for customers",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-5",
+      "name": "Admin Panel",
+      "description": "Super admin dashboard for platform management",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-6",
+      "name": "Billing & Usage",
+      "description": "Stripe integration and usage metering",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-7",
+      "name": "Detection Engine",
+      "description": "VPN, bot, and fraud detection logic",
+      "requiresApproval": true
+    },
+    {
+      "id": "PHASE-8",
+      "name": "Polish & Launch",
+      "description": "Documentation, deployment, final polish",
+      "requiresApproval": true
+    }
+  ],
+  "userStories": [
+    {
+      "id": "STORY-001",
+      "phase": "PHASE-1",
+      "title": "Initialize monorepo with pnpm workspaces",
+      "description": "Create monorepo structure with pnpm workspaces. Packages: sdk (client SDK), api (Hono backend), dashboard (Next.js customer dashboard), admin (Next.js admin panel), shared (common types/utils).",
+      "acceptanceCriteria": [
+        "pnpm-workspace.yaml configured",
+        "package.json with workspace scripts",
+        "tsconfig.json base config with path aliases",
+        "Each package has its own package.json",
+        "pnpm install works without errors"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-002",
+      "phase": "PHASE-1",
+      "title": "Setup shared types package",
+      "description": "Create packages/shared with TypeScript types for: Account, ApiKey, Visitor, VisitorEvent, Tier, UsageRecord. Export all types.",
+      "acceptanceCriteria": [
+        "Account type with id, email, name, tier, status, createdAt",
+        "ApiKey type with id, accountId, key, name, status, allowedDomains, createdAt",
+        "Visitor type with id, fingerprint, firstSeen, lastSeen, visits",
+        "VisitorEvent type with id, visitorId, apiKeyId, signals, risk, timestamp",
+        "Tier enum: FREE, STARTER, GROWTH, SCALE, ENTERPRISE",
+        "All types exported from index.ts"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-003",
+      "phase": "PHASE-1",
+      "title": "Setup Prisma schema for accounts and API keys",
+      "description": "Create Prisma schema in packages/api with Account and ApiKey models. Include relations. Setup SQLite for dev, PostgreSQL config for prod.",
+      "acceptanceCriteria": [
+        "Account model with all fields from shared types",
+        "ApiKey model with all fields and relation to Account",
+        "SQLite datasource for development",
+        "prisma generate works",
+        "prisma db push creates tables"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-004",
+      "phase": "PHASE-1",
+      "title": "Setup Prisma schema for visitors and events",
+      "description": "Add Visitor and VisitorEvent models to Prisma schema. Include indexes for fingerprint lookup and time-based queries.",
+      "acceptanceCriteria": [
+        "Visitor model with fingerprint, firstSeen, lastSeen, visitCount",
+        "VisitorEvent model with signals JSON, risk score, detection flags",
+        "Index on Visitor.fingerprint",
+        "Index on VisitorEvent.timestamp",
+        "Relation: VisitorEvent belongs to Visitor and ApiKey"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-005",
+      "phase": "PHASE-1",
+      "title": "Setup Prisma schema for usage tracking",
+      "description": "Add UsageRecord model to track API calls per account per day. Include tier limits configuration.",
+      "acceptanceCriteria": [
+        "UsageRecord model with accountId, date, requestCount",
+        "Unique constraint on accountId + date",
+        "TierLimit model with tier, monthlyLimit, features JSON",
+        "Seed script to populate tier limits"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-006",
+      "phase": "PHASE-1",
+      "title": "Create API key generation utility",
+      "description": "Create utility in packages/shared to generate secure API keys with prefix (fs_live_, fs_test_). Include validation function.",
+      "acceptanceCriteria": [
+        "generateApiKey(type: 'live' | 'test') returns prefixed key",
+        "Keys are 32 chars of cryptographically random hex after prefix",
+        "validateApiKey(key) checks format",
+        "Unit tests for generation and validation"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-007",
+      "phase": "PHASE-1",
+      "title": "Setup Vitest for monorepo",
+      "description": "Configure Vitest at root level with workspace support. Each package should be able to run tests independently or all together.",
+      "acceptanceCriteria": [
+        "vitest.workspace.ts configured",
+        "npm test at root runs all package tests",
+        "npm test in each package runs only that package",
+        "Coverage reporting enabled",
+        "At least one passing test in shared package"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-008",
+      "phase": "PHASE-2",
+      "title": "Create SDK package structure",
+      "description": "Setup packages/sdk with TypeScript, Rollup for bundling. Create FraudShield class skeleton with constructor taking apiKey.",
+      "acceptanceCriteria": [
+        "TypeScript configured with strict mode",
+        "Rollup config for UMD and ESM bundles",
+        "FraudShield class with constructor({ apiKey, endpoint? })",
+        "Build produces sdk.min.js < 10KB",
+        "Package exports FraudShield class"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-009",
+      "phase": "PHASE-2",
+      "title": "Implement canvas fingerprint signal",
+      "description": "Add canvas fingerprinting to SDK. Draw text and shapes, extract dataURL, hash it.",
+      "acceptanceCriteria": [
+        "getCanvasFingerprint() returns hash string",
+        "Draws specific text with emoji and shapes",
+        "Uses canvas 2D context",
+        "Returns consistent hash for same browser",
+        "Handles canvas not supported gracefully"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-010",
+      "phase": "PHASE-2",
+      "title": "Implement WebGL fingerprint signal",
+      "description": "Add WebGL fingerprinting. Extract renderer, vendor, and shader precision.",
+      "acceptanceCriteria": [
+        "getWebGLFingerprint() returns { renderer, vendor, hash }",
+        "Uses WEBGL_debug_renderer_info extension",
+        "Falls back gracefully if WebGL unavailable",
+        "Includes shader precision info in hash",
+        "Unit test with mocked WebGL context"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-011",
+      "phase": "PHASE-2",
+      "title": "Implement audio fingerprint signal",
+      "description": "Add AudioContext fingerprinting using oscillator and compressor.",
+      "acceptanceCriteria": [
+        "getAudioFingerprint() returns hash string",
+        "Creates offline AudioContext",
+        "Uses OscillatorNode + DynamicsCompressorNode",
+        "Extracts channel data and hashes it",
+        "Handles AudioContext not supported"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-012",
+      "phase": "PHASE-2",
+      "title": "Implement navigator signals collection",
+      "description": "Collect navigator properties: userAgent, platform, language, languages, hardwareConcurrency, deviceMemory, maxTouchPoints.",
+      "acceptanceCriteria": [
+        "getNavigatorSignals() returns object with all properties",
+        "Handles missing properties gracefully (undefined)",
+        "Includes cookieEnabled, doNotTrack",
+        "Returns plugins list (if available)",
+        "Unit tests mock navigator object"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-013",
+      "phase": "PHASE-2",
+      "title": "Implement screen signals collection",
+      "description": "Collect screen properties: width, height, availWidth, availHeight, colorDepth, pixelRatio.",
+      "acceptanceCriteria": [
+        "getScreenSignals() returns screen metrics object",
+        "Includes window.devicePixelRatio",
+        "Includes screen.orientation if available",
+        "Handles iframe restrictions gracefully"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-014",
+      "phase": "PHASE-2",
+      "title": "Implement timezone and locale signals",
+      "description": "Collect timezone and locale info using Intl API.",
+      "acceptanceCriteria": [
+        "getTimezoneSignals() returns timezone name and offset",
+        "Uses Intl.DateTimeFormat().resolvedOptions()",
+        "Includes Date().getTimezoneOffset()",
+        "Returns locale from navigator.language"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-015",
+      "phase": "PHASE-2",
+      "title": "Implement WebRTC local IP detection",
+      "description": "Detect local IPs via WebRTC for VPN leak detection.",
+      "acceptanceCriteria": [
+        "getWebRTCIPs() returns array of local IP addresses",
+        "Uses RTCPeerConnection with STUN",
+        "Handles WebRTC disabled/blocked",
+        "Timeout after 3 seconds",
+        "Returns empty array if no IPs found"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "STORY-016",
+      "phase": "PHASE-2",
+      "title": "Implement bot detection signals",
+      "description": "Collect signals for headless/bot detection: webdriver, phantom, selenium artifacts.",
+      "acceptanceCriteria": [
+        "getBotSignals() returns detection flags object",
+        "Checks navigator.webdriver",
+        "Checks window.phantom, window.__selenium",
+        "Checks for chrome.runtime in non-Chrome",
+        "Checks for inconsistent permissions API"
+      ],
+      "priority": 9,
+      "passes": false
+    },
+    {
+      "id": "STORY-017",
+      "phase": "PHASE-2",
+      "title": "Create SDK analyze() method",
+      "description": "Implement main analyze() method that collects all signals and sends to API.",
+      "acceptanceCriteria": [
+        "analyze() collects all signals",
+        "Posts signals to configured endpoint",
+        "Includes API key in Authorization header",
+        "Returns parsed API response",
+        "Throws FraudShieldError on failures"
+      ],
+      "priority": 10,
+      "passes": false
+    },
+    {
+      "id": "STORY-018",
+      "phase": "PHASE-2",
+      "title": "Add SDK error handling and types",
+      "description": "Create FraudShieldError class and TypeScript types for SDK responses.",
+      "acceptanceCriteria": [
+        "FraudShieldError extends Error with code property",
+        "Error codes: INVALID_KEY, QUOTA_EXCEEDED, NETWORK_ERROR, SUSPENDED",
+        "AnalyzeResult type with visitorId, confidence, risk, signals",
+        "SDK options type exported",
+        "JSDoc comments on public methods"
+      ],
+      "priority": 11,
+      "passes": false
+    },
+    {
+      "id": "STORY-019",
+      "phase": "PHASE-2",
+      "title": "Setup SDK build and minification",
+      "description": "Configure Rollup with terser for minification and obfuscation.",
+      "acceptanceCriteria": [
+        "npm run build produces dist/sdk.min.js",
+        "Output is minified and mangled",
+        "Source maps generated but not included in dist",
+        "Build size < 8KB gzipped",
+        "UMD bundle works via script tag"
+      ],
+      "priority": 12,
+      "passes": false
+    },
+    {
+      "id": "STORY-020",
+      "phase": "PHASE-3",
+      "title": "Setup Hono API with basic structure",
+      "description": "Create packages/api with Hono. Setup routes structure, CORS, and error handling middleware.",
+      "acceptanceCriteria": [
+        "Hono app with /health endpoint",
+        "CORS configured for all origins (dev)",
+        "Error handling middleware returns JSON errors",
+        "Request logging middleware",
+        "npm run dev starts server on port 3001"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-021",
+      "phase": "PHASE-3",
+      "title": "Implement API key validation middleware",
+      "description": "Create middleware to validate API key from Authorization header, load account, check status.",
+      "acceptanceCriteria": [
+        "Extracts key from 'Bearer fs_*' header",
+        "Looks up key in database",
+        "Returns 401 if key invalid or not found",
+        "Returns 403 if account suspended",
+        "Attaches account and apiKey to context"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-022",
+      "phase": "PHASE-3",
+      "title": "Implement usage tracking middleware",
+      "description": "Create middleware to track API usage and enforce tier limits.",
+      "acceptanceCriteria": [
+        "Increments UsageRecord for account on each request",
+        "Creates record if not exists for today",
+        "Returns 429 if monthly limit exceeded",
+        "Includes X-RateLimit headers in response",
+        "Works with Redis for high throughput (optional)"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-023",
+      "phase": "PHASE-3",
+      "title": "Create fingerprint hashing service",
+      "description": "Create server-side service to compute stable fingerprint hash from raw signals.",
+      "acceptanceCriteria": [
+        "computeFingerprint(signals) returns stable hash",
+        "Uses SHA-256 on normalized signal JSON",
+        "Normalizes signal order for consistency",
+        "Excludes volatile signals (timestamps)",
+        "Unit tests verify hash stability"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-024",
+      "phase": "PHASE-3",
+      "title": "Implement POST /v1/analyze endpoint",
+      "description": "Create main analyze endpoint that receives signals, computes fingerprint, stores visitor.",
+      "acceptanceCriteria": [
+        "Accepts JSON body with signals object",
+        "Computes fingerprint hash",
+        "Creates or updates Visitor record",
+        "Creates VisitorEvent with signals",
+        "Returns visitorId, confidence, firstSeen, lastSeen"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-025",
+      "phase": "PHASE-3",
+      "title": "Implement GET /v1/visitors/:id endpoint",
+      "description": "Create endpoint to look up visitor by ID.",
+      "acceptanceCriteria": [
+        "Returns visitor details if found",
+        "Returns 404 if not found",
+        "Includes visit count, first/last seen",
+        "Scoped to API key's account only",
+        "Supports ?include=events for recent events"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-026",
+      "phase": "PHASE-3",
+      "title": "Implement GET /v1/visitors endpoint",
+      "description": "Create endpoint to list visitors with pagination and filters.",
+      "acceptanceCriteria": [
+        "Pagination with limit/offset",
+        "Filter by date range",
+        "Filter by risk level",
+        "Returns total count in response",
+        "Ordered by lastSeen desc by default"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-027",
+      "phase": "PHASE-3",
+      "title": "Implement GET /v1/usage endpoint",
+      "description": "Create endpoint for customers to check their usage.",
+      "acceptanceCriteria": [
+        "Returns current month usage count",
+        "Returns tier limit",
+        "Returns percentage used",
+        "Returns daily breakdown for current month",
+        "Calculated from UsageRecord table"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "STORY-028",
+      "phase": "PHASE-3",
+      "title": "Add IP extraction and geolocation stub",
+      "description": "Extract client IP from request, add stub for geolocation lookup.",
+      "acceptanceCriteria": [
+        "Extracts IP from X-Forwarded-For or socket",
+        "Handles IPv4 and IPv6",
+        "GeoLocation interface defined",
+        "Stub returns null (real implementation later)",
+        "IP stored in VisitorEvent"
+      ],
+      "priority": 9,
+      "passes": false
+    },
+    {
+      "id": "STORY-029",
+      "phase": "PHASE-4",
+      "title": "Setup Next.js dashboard with auth",
+      "description": "Create packages/dashboard with Next.js 15, setup basic auth using next-auth with credentials provider.",
+      "acceptanceCriteria": [
+        "Next.js 15 with App Router",
+        "next-auth configured with credentials provider",
+        "Login page at /login",
+        "Protected routes redirect to login",
+        "Session includes account ID and tier"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-030",
+      "phase": "PHASE-4",
+      "title": "Create dashboard layout with sidebar",
+      "description": "Create main dashboard layout with sidebar navigation using shadcn/ui.",
+      "acceptanceCriteria": [
+        "Sidebar with nav items: Overview, Visitors, API Keys, Usage, Settings",
+        "Header with account dropdown",
+        "Responsive - collapses on mobile",
+        "Uses shadcn/ui components",
+        "Dark mode support"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-031",
+      "phase": "PHASE-4",
+      "title": "Create dashboard overview page",
+      "description": "Build overview page with key metrics: total visitors, requests today, detection rates.",
+      "acceptanceCriteria": [
+        "Stat cards for: Visitors (30d), Requests (today), VPN %, Bot %",
+        "Simple line chart for requests over last 7 days",
+        "Recent visitors list (last 10)",
+        "Data fetched from API"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-032",
+      "phase": "PHASE-4",
+      "title": "Create visitors list page",
+      "description": "Build visitors page with searchable, filterable table.",
+      "acceptanceCriteria": [
+        "Table with columns: ID, First Seen, Last Seen, Visits, Risk",
+        "Search by visitor ID",
+        "Filter by risk level",
+        "Pagination controls",
+        "Click row to view detail"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-033",
+      "phase": "PHASE-4",
+      "title": "Create visitor detail page",
+      "description": "Build visitor detail page showing full info and event history.",
+      "acceptanceCriteria": [
+        "Shows visitor ID, fingerprint (truncated), first/last seen",
+        "Risk assessment breakdown",
+        "Detection flags (VPN, bot, incognito)",
+        "Event history table with timestamps",
+        "Device/browser info from signals"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-034",
+      "phase": "PHASE-4",
+      "title": "Create API keys management page",
+      "description": "Build page to list, create, and revoke API keys.",
+      "acceptanceCriteria": [
+        "Table of API keys with name, created, status, last used",
+        "Create key button opens modal",
+        "Key shown once on creation (copy button)",
+        "Revoke button with confirmation",
+        "Edit key name inline"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-035",
+      "phase": "PHASE-4",
+      "title": "Create usage page",
+      "description": "Build usage page showing current usage and history.",
+      "acceptanceCriteria": [
+        "Current month usage vs limit",
+        "Progress bar visualization",
+        "Daily usage chart for current month",
+        "Tier info and upgrade CTA",
+        "Usage by API key breakdown"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-036",
+      "phase": "PHASE-4",
+      "title": "Create settings page",
+      "description": "Build account settings page with profile and preferences.",
+      "acceptanceCriteria": [
+        "Edit account name, email",
+        "Change password form",
+        "Webhook URL configuration (stub)",
+        "Delete account button (with confirmation)",
+        "Current tier display"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "STORY-037",
+      "phase": "PHASE-5",
+      "title": "Setup admin panel with separate auth",
+      "description": "Create packages/admin with Next.js 15, separate auth from customer dashboard.",
+      "acceptanceCriteria": [
+        "Separate Next.js app",
+        "Admin-only auth (different credentials)",
+        "Role-based access: SUPER_ADMIN, SUPPORT, READONLY",
+        "2FA setup page (stub)",
+        "Runs on different port (3003)"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-038",
+      "phase": "PHASE-5",
+      "title": "Create admin layout with navigation",
+      "description": "Build admin layout with sidebar: Dashboard, Accounts, API Keys, Billing, Metrics, Audit Log.",
+      "acceptanceCriteria": [
+        "Sidebar with all nav items",
+        "Role badge in header",
+        "Different color scheme from customer dashboard",
+        "Breadcrumb navigation",
+        "Quick search in header"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-039",
+      "phase": "PHASE-5",
+      "title": "Create admin dashboard overview",
+      "description": "Build admin overview with platform-wide metrics.",
+      "acceptanceCriteria": [
+        "MRR, Total Accounts, Requests/day, Active Keys",
+        "Revenue chart (last 30 days)",
+        "New signups list",
+        "Top accounts by usage",
+        "System health indicators (stub)"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-040",
+      "phase": "PHASE-5",
+      "title": "Create accounts list page",
+      "description": "Build searchable accounts list with filters.",
+      "acceptanceCriteria": [
+        "Table: Email, Name, Tier, Status, Created, Usage",
+        "Search by email or name",
+        "Filter by tier, status",
+        "Bulk actions: suspend, change tier",
+        "Click to view account detail"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-041",
+      "phase": "PHASE-5",
+      "title": "Create account detail page",
+      "description": "Build detailed account view with all info and actions.",
+      "acceptanceCriteria": [
+        "Account info editable (name, tier, status)",
+        "API keys list for account",
+        "Usage history chart",
+        "Billing history",
+        "Impersonate button (opens customer dashboard as them)",
+        "Suspend/unsuspend actions"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-042",
+      "phase": "PHASE-5",
+      "title": "Create API key issuance page",
+      "description": "Build page to issue, revoke, and manage any account's API keys.",
+      "acceptanceCriteria": [
+        "List all keys across platform",
+        "Filter by account, status",
+        "Issue key for any account",
+        "Revoke with reason field",
+        "Override limits per key",
+        "Domain allowlist editor"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-043",
+      "phase": "PHASE-5",
+      "title": "Create audit log viewer",
+      "description": "Build audit log page showing all admin actions.",
+      "acceptanceCriteria": [
+        "Table: Timestamp, Admin, Action, Target, Details",
+        "Filter by admin, action type, date",
+        "Search in details",
+        "Export to CSV",
+        "Pagination"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-044",
+      "phase": "PHASE-5",
+      "title": "Implement audit logging service",
+      "description": "Create service to log all admin actions to database.",
+      "acceptanceCriteria": [
+        "AuditLog model in Prisma",
+        "logAdminAction(adminId, action, target, details)",
+        "Actions: CREATE_ACCOUNT, SUSPEND, REVOKE_KEY, etc.",
+        "Stores IP and user agent",
+        "Called from all admin API routes"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "STORY-045",
+      "phase": "PHASE-6",
+      "title": "Setup Stripe integration",
+      "description": "Configure Stripe with products and prices for each tier.",
+      "acceptanceCriteria": [
+        "Stripe SDK installed",
+        "Products created: Starter, Growth, Scale, Enterprise",
+        "Monthly prices configured",
+        "Webhook endpoint stub",
+        "Environment variables for keys"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-046",
+      "phase": "PHASE-6",
+      "title": "Implement checkout flow",
+      "description": "Create checkout session endpoint and redirect flow.",
+      "acceptanceCriteria": [
+        "POST /api/billing/checkout creates Stripe session",
+        "Redirects to Stripe Checkout",
+        "Success URL updates account tier",
+        "Cancel URL returns to dashboard",
+        "Stores Stripe customer ID on account"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-047",
+      "phase": "PHASE-6",
+      "title": "Implement billing portal",
+      "description": "Create endpoint to redirect to Stripe billing portal.",
+      "acceptanceCriteria": [
+        "POST /api/billing/portal returns portal URL",
+        "Customer can manage subscription",
+        "Can update payment method",
+        "Can view invoices",
+        "Can cancel subscription"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-048",
+      "phase": "PHASE-6",
+      "title": "Implement Stripe webhook handler",
+      "description": "Handle Stripe webhooks for subscription events.",
+      "acceptanceCriteria": [
+        "POST /api/webhooks/stripe endpoint",
+        "Validates webhook signature",
+        "Handles customer.subscription.created",
+        "Handles customer.subscription.updated",
+        "Handles customer.subscription.deleted",
+        "Updates account tier accordingly"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-049",
+      "phase": "PHASE-6",
+      "title": "Create billing page in dashboard",
+      "description": "Build billing page showing current plan and upgrade options.",
+      "acceptanceCriteria": [
+        "Current plan display with features",
+        "Plan comparison grid",
+        "Upgrade/downgrade buttons",
+        "Billing portal link",
+        "Usage vs limit indicator"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-050",
+      "phase": "PHASE-6",
+      "title": "Create admin billing overview",
+      "description": "Build billing dashboard in admin panel.",
+      "acceptanceCriteria": [
+        "MRR and ARR calculations",
+        "Revenue by tier breakdown",
+        "Recent payments list",
+        "Failed payments list",
+        "Manual tier override form"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-051",
+      "phase": "PHASE-7",
+      "title": "Integrate GeoLite2 database",
+      "description": "Download and integrate MaxMind GeoLite2 for IP geolocation.",
+      "acceptanceCriteria": [
+        "Script to download GeoLite2-City.mmdb",
+        "maxmind npm package configured",
+        "getGeoLocation(ip) returns country, city, timezone",
+        "Handles missing/invalid IPs gracefully",
+        "Update script for weekly refresh"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-052",
+      "phase": "PHASE-7",
+      "title": "Implement VPN IP list loader",
+      "description": "Download and parse VPN IP lists from X4BNet.",
+      "acceptanceCriteria": [
+        "Script to download vpn-ipv4.txt",
+        "Parse into CIDR ranges",
+        "isVpnIP(ip) lookup function",
+        "Efficient IP range matching",
+        "Daily update cron job"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-053",
+      "phase": "PHASE-7",
+      "title": "Implement Tor exit node detection",
+      "description": "Download Tor exit node list and implement detection.",
+      "acceptanceCriteria": [
+        "Script to download from torproject.org",
+        "isTorExitNode(ip) function",
+        "Hourly update (Tor list changes frequently)",
+        "Set-based lookup for performance"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-054",
+      "phase": "PHASE-7",
+      "title": "Implement datacenter IP detection",
+      "description": "Load ipcat datacenter list and detect cloud IPs.",
+      "acceptanceCriteria": [
+        "Parse ipcat datacenters.csv",
+        "isDatacenterIP(ip) returns provider name or null",
+        "Covers AWS, GCP, Azure, DigitalOcean, etc.",
+        "Weekly update"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-055",
+      "phase": "PHASE-7",
+      "title": "Implement timezone mismatch detection",
+      "description": "Compare browser timezone to IP geolocation timezone.",
+      "acceptanceCriteria": [
+        "getTimezoneMismatch(browserTz, geoTz) returns score",
+        "Handles same region but different offset",
+        "Returns 0 if match, 1 if mismatch",
+        "Accounts for DST differences"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-056",
+      "phase": "PHASE-7",
+      "title": "Implement bot score calculation",
+      "description": "Calculate bot probability score from collected signals.",
+      "acceptanceCriteria": [
+        "calculateBotScore(signals) returns 0-1 score",
+        "Weights: webdriver (high), phantom (high), plugins mismatch (medium)",
+        "Returns breakdown of contributing factors",
+        "Threshold configurable per tier"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-057",
+      "phase": "PHASE-7",
+      "title": "Implement risk score aggregation",
+      "description": "Combine all detection signals into overall risk score.",
+      "acceptanceCriteria": [
+        "calculateRiskScore(signals, ip) returns overall risk",
+        "Factors: VPN, Tor, datacenter, bot, timezone mismatch",
+        "Returns risk level: low, medium, high, critical",
+        "Returns individual signal scores",
+        "Configurable weights"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "STORY-058",
+      "phase": "PHASE-7",
+      "title": "Add detection results to API response",
+      "description": "Include full detection results in /v1/analyze response.",
+      "acceptanceCriteria": [
+        "Response includes risk.score, risk.level",
+        "Response includes signals.vpn, signals.tor, signals.bot, etc.",
+        "Response includes location from IP",
+        "Response includes device info parsed from UA",
+        "All stored in VisitorEvent"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "STORY-059",
+      "phase": "PHASE-8",
+      "title": "Create API documentation",
+      "description": "Write API documentation with examples.",
+      "acceptanceCriteria": [
+        "OpenAPI/Swagger spec",
+        "Endpoint documentation with examples",
+        "Authentication section",
+        "Error codes reference",
+        "Rate limiting documentation"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "STORY-060",
+      "phase": "PHASE-8",
+      "title": "Create SDK integration guide",
+      "description": "Write developer guide for SDK integration.",
+      "acceptanceCriteria": [
+        "Quick start guide",
+        "Script tag integration",
+        "npm integration",
+        "React example",
+        "Error handling examples"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "STORY-061",
+      "phase": "PHASE-8",
+      "title": "Create Docker deployment config",
+      "description": "Create Dockerfile and docker-compose for deployment.",
+      "acceptanceCriteria": [
+        "Dockerfile for API",
+        "Dockerfile for dashboard",
+        "Dockerfile for admin",
+        "docker-compose.yml with all services",
+        "Includes PostgreSQL and Redis"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "STORY-062",
+      "phase": "PHASE-8",
+      "title": "Create IP list update cron jobs",
+      "description": "Setup automated updates for all IP intelligence lists.",
+      "acceptanceCriteria": [
+        "Cron script for GeoLite2 (weekly)",
+        "Cron script for VPN list (daily)",
+        "Cron script for Tor exits (hourly)",
+        "Cron script for datacenter list (weekly)",
+        "Logs update success/failure"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "STORY-063",
+      "phase": "PHASE-8",
+      "title": "Add health check and monitoring endpoints",
+      "description": "Create endpoints for operational monitoring.",
+      "acceptanceCriteria": [
+        "/health returns 200 if healthy",
+        "/health/db checks database connection",
+        "/health/ready for k8s readiness",
+        "/metrics stub for Prometheus (optional)",
+        "IP list freshness in health response"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "STORY-064",
+      "phase": "PHASE-8",
+      "title": "Create signup and onboarding flow",
+      "description": "Build public signup page and onboarding wizard.",
+      "acceptanceCriteria": [
+        "Signup page with email/password",
+        "Email verification (stub)",
+        "Onboarding wizard: create first API key",
+        "Show integration code snippet",
+        "Redirect to dashboard"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "STORY-065",
+      "phase": "PHASE-8",
+      "title": "Create marketing landing page",
+      "description": "Build simple landing page for the product.",
+      "acceptanceCriteria": [
+        "Hero section with value prop",
+        "Feature highlights",
+        "Pricing table",
+        "Integration code preview",
+        "CTA to signup"
+      ],
+      "priority": 7,
+      "passes": false
+    }
+  ]
+}
