@@ -47,3 +47,9 @@ Started: Thu Feb 19 21:32:30 SAST 2026
 - Committed: f01c5c9
 
 **Learning:** SQLite doesn't support enums — use String fields with application-level validation instead. Prisma 7 has breaking changes (config file required); Prisma 5 is more stable for quick setup.
+
+### STORY-003: Setup Prisma schema for accounts and API keys ✅
+- SQLite doesn't support enums — use String fields with app-level validation
+- Prisma 5 is stable; Prisma 7 has breaking changes
+- allowedDomains stored as JSON string (parse at app level)
+

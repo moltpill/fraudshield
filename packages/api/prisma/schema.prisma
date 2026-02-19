@@ -43,9 +43,48 @@ model ApiKey {
   createdAt      DateTime @default(now())
 
   // Relations
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account       Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  visitorEvents VisitorEvent[]
 
   @@index([accountId])
   @@index([key])
   @@map("api_keys")
+}
+
+/// Unique visitor identified by fingerprint
+model Visitor {
+  id         String   @id @default(cuid())
+  fingerprint String  @unique
+  firstSeen  DateTime
+  lastSeen   DateTime
+  visitCount Int      @default(1)
+
+  // Relations
+  events VisitorEvent[]
+
+  @@index([fingerprint])
+  @@map("visitors")
+}
+
+/// Individual analyze() request/event
+model VisitorEvent {
+  id           String   @id @default(cuid())
+  visitorId    String
+  apiKeyId     String
+  signals      String   // JSON stored as string for SQLite
+  riskScore    Int
+  isBot        Boolean  @default(false)
+  isVpn        Boolean  @default(false)
+  isTor        Boolean  @default(false)
+  isDatacenter Boolean  @default(false)
+  timestamp    DateTime @default(now())
+
+  // Relations
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  apiKey  ApiKey  @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([visitorId])
+  @@index([apiKeyId])
+  @@index([timestamp])
+  @@map("visitor_events")
 }

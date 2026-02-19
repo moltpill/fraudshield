@@ -97,7 +97,7 @@
         "prisma db push creates tables"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-004",
