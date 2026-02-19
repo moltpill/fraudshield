@@ -8,13 +8,13 @@ const banner = `/**
  */`
 
 export default [
-  // ESM bundle
+  // ESM bundle (no sourcemap in dist for production)
   {
     input: 'src/index.ts',
     output: {
       file: 'dist/sdk.esm.js',
       format: 'esm',
-      sourcemap: true,
+      sourcemap: false,
       banner
     },
     plugins: [
@@ -24,14 +24,14 @@ export default [
       })
     ]
   },
-  // UMD bundle (for script tags)
+  // UMD bundle (for script tags, no sourcemap in dist)
   {
     input: 'src/index.ts',
     output: {
       file: 'dist/sdk.umd.js',
       format: 'umd',
       name: 'FraudShield',
-      sourcemap: true,
+      sourcemap: false,
       banner,
       exports: 'named'
     },
@@ -42,14 +42,14 @@ export default [
       })
     ]
   },
-  // Minified browser bundle
+  // Minified browser bundle (no sourcemap in dist)
   {
     input: 'src/index.ts',
     output: {
       file: 'dist/sdk.min.js',
       format: 'umd',
       name: 'FraudShield',
-      sourcemap: true,
+      sourcemap: false,
       exports: 'named'
     },
     plugins: [
@@ -60,7 +60,9 @@ export default [
       terser({
         format: {
           comments: false
-        }
+        },
+        mangle: true,
+        compress: true
       })
     ]
   }

@@ -318,7 +318,7 @@
         "JSDoc comments on public methods"
       ],
       "priority": 11,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-019",

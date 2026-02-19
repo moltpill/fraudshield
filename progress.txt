@@ -328,3 +328,26 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - FraudShieldError with statusCode and code properties
 - Object.setPrototypeOf needed for correct instanceof in transpiled code
 
+
+
+### STORY-018: Add SDK error handling and types ✅
+- ErrorCode constants: INVALID_KEY, QUOTA_EXCEEDED, NETWORK_ERROR, SUSPENDED
+- AnalyzeResult type with visitorId, confidence, risk, signals properties
+- FraudShieldOptions type already exported
+- JSDoc comments on public methods (already present)
+- Network errors now include NETWORK_ERROR code
+- 15 tests covering error codes, types, and network error behavior
+- Total: 163 tests passing
+
+**Learning:** Use `as const` for error code objects to get proper literal types. ErrorCodeType derived as `(typeof ErrorCode)[keyof typeof ErrorCode]` gives union of literal values. Keep backward compatibility by adding new types alongside existing ones (AnalyzeResult added, AnalyzeResponse kept for existing tests).
+
+### STORY-018: Add SDK error handling and types ✅
+- ErrorCode: { INVALID_KEY, QUOTA_EXCEEDED, NETWORK_ERROR, SUSPENDED }
+- AnalyzeResult: { visitorId, confidence, risk, signals, requestId? }
+- Network errors include code: ErrorCode.NETWORK_ERROR
+
+### STORY-018: Add SDK error handling and types ✅
+- ErrorCode constants: INVALID_KEY, QUOTA_EXCEEDED, NETWORK_ERROR, SUSPENDED
+- AnalyzeResult type with visitorId, confidence, risk, signals
+- Use 'as const' for literal types, derive union with (typeof X)[keyof typeof X]
+
