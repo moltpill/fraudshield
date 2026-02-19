@@ -303,7 +303,7 @@
         "Throws FraudShieldError on failures"
       ],
       "priority": 10,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-018",

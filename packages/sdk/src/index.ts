@@ -3,6 +3,39 @@ export { getCanvasFingerprint } from './signals/canvas'
 export { getBotSignals } from './signals/bot'
 export type { BotSignals } from './signals/bot'
 
+/**
+ * Standard error codes returned by the FraudShield API
+ */
+export const ErrorCode = {
+  /** API key is invalid or not found */
+  INVALID_KEY: 'INVALID_KEY',
+  /** Monthly quota has been exceeded */
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  /** Network error occurred during request */
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  /** Account has been suspended */
+  SUSPENDED: 'SUSPENDED',
+} as const
+
+/** Type for error code values */
+export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode]
+
+/**
+ * Result of the analyze() method
+ */
+export interface AnalyzeResult {
+  /** Unique visitor identifier (fingerprint hash) */
+  visitorId: string
+  /** Confidence score of the fingerprint (0-1) */
+  confidence: number
+  /** Risk level assessment */
+  risk: 'low' | 'medium' | 'high'
+  /** Detection signals and flags */
+  signals: Record<string, boolean>
+  /** Optional request ID for debugging */
+  requestId?: string
+}
+
 import { getCanvasFingerprint } from './signals/canvas'
 import { getWebGLFingerprint } from './signals/webgl'
 import { getAudioFingerprint } from './signals/audio'
@@ -160,7 +193,7 @@ export class FraudShield {
     } catch (error) {
       // Network error
       const message = error instanceof Error ? error.message : 'Network error'
-      throw new FraudShieldError(message)
+      throw new FraudShieldError(message, { code: ErrorCode.NETWORK_ERROR })
     }
 
     if (!response.ok) {

@@ -308,3 +308,23 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - chromeRuntime: chrome.runtime in non-Chrome
 - inconsistentPermissions: fake sync permissions API (real returns Promise)
 
+
+
+### STORY-017: Create SDK analyze() method ✅
+- analyze() collects all 8 signal types in parallel (canvas, webgl, audio, navigator, screen, timezone, webrtcIPs, bot)
+- POSTs to configured endpoint + /v1/analyze
+- Includes Authorization: Bearer <apiKey> header
+- Returns parsed JSON response (visitorId, riskScore, flags, etc.)
+- FraudShieldError class with optional statusCode and code properties
+- Handles network errors, HTTP errors, and JSON parse failures gracefully
+- 14 tests covering all acceptance criteria
+- Total: 148 tests passing
+
+**Learning:** Use Promise.all() for async signal collectors (canvas, webgl, audio, navigator, webrtcIPs) to collect in parallel for performance. Sync collectors (screen, timezone, bot) run immediately after. FraudShieldError needs Object.setPrototypeOf(this, FraudShieldError.prototype) for correct instanceof checks in transpiled code.
+
+### STORY-017: Create SDK analyze() method ✅
+- Collects all 8 signal types in parallel (Promise.all for async signals)
+- POSTs to endpoint/v1/analyze with Authorization: Bearer header
+- FraudShieldError with statusCode and code properties
+- Object.setPrototypeOf needed for correct instanceof in transpiled code
+
