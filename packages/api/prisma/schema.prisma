@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite for development, PostgreSQL for production
+// Switch via DATABASE_URL env var
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Note: SQLite doesn't support enums, so we use String with validation at app level
+// Tier values: FREE, STARTER, GROWTH, SCALE, ENTERPRISE
+// AccountStatus values: active, suspended, cancelled  
+// ApiKeyStatus values: active, revoked
+
+/// Customer account
+model Account {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  tier      String   @default("FREE") // FREE, STARTER, GROWTH, SCALE, ENTERPRISE
+  status    String   @default("active") // active, suspended, cancelled
+  createdAt DateTime @default(now())
+
+  // Relations
+  apiKeys ApiKey[]
+
+  @@map("accounts")
+}
+
+/// API key for SDK authentication
+model ApiKey {
+  id             String   @id @default(cuid())
+  accountId      String
+  key            String   @unique
+  name           String
+  status         String   @default("active") // active, revoked
+  allowedDomains String   @default("[]") // JSON array stored as string for SQLite
+  createdAt      DateTime @default(now())
+
+  // Relations
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([key])
+  @@map("api_keys")
+}
