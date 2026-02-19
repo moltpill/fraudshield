@@ -198,3 +198,17 @@ Started: Thu Feb 19 22:03:19 SAST 2026
 - Shader precision included in hash
 - Graceful fallback for missing WebGL/debug extension
 
+
+
+### STORY-011: Implement audio fingerprint signal ✅
+- getAudioFingerprint() in packages/sdk/src/signals/audio.ts
+- Uses OfflineAudioContext with webkit fallback
+- Creates oscillator (triangle wave, 10kHz) + DynamicsCompressor chain
+- Renders 4500 samples at 44100Hz, extracts channel data
+- djb2 hash on float32 samples (6 decimal precision)
+- Returns 'audio-not-supported' when AudioContext unavailable
+- 8 tests covering all acceptance criteria
+- Bundle: 1.38KB (unchanged from STORY-010)
+- Total: 77 tests passing
+
+**Learning:** Audio fingerprinting uses OfflineAudioContext to render audio offline, then extracts the Float32Array channel data. Different browser audio stacks produce slightly different output for the same oscillator/compressor config.

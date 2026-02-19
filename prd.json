@@ -215,7 +215,7 @@
         "Handles AudioContext not supported"
       ],
       "priority": 4,
-      "passes": false
+      "passes": true
     },
     {
       "id": "STORY-012",
