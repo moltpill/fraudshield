@@ -11,8 +11,9 @@ FROM base AS builder
 WORKDIR /app
 
 # Workspace manifests (layer-cache friendly)
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.json ./
 COPY packages/shared/package.json    ./packages/shared/
+COPY packages/shared/tsconfig.json   ./packages/shared/
 COPY packages/dashboard/package.json ./packages/dashboard/
 # api package.json required for pnpm workspace resolution
 COPY packages/api/package.json       ./packages/api/

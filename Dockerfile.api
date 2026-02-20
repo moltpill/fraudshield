@@ -11,9 +11,10 @@ FROM base AS builder
 WORKDIR /app
 
 # Copy workspace manifests first (better layer caching)
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/api/package.json    ./packages/api/
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.json ./
+COPY packages/shared/package.json  ./packages/shared/
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/api/package.json     ./packages/api/
 
 # Install ALL workspace deps (needed for build tools)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
