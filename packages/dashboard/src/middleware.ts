@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Public paths that don't require authentication
-const PUBLIC_PATHS = ['/login', '/api/auth']
+const PUBLIC_PATHS = ['/', '/login', '/signup', '/api/auth']
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
