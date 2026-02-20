@@ -39,7 +39,9 @@ services:
       context: .
       dockerfile: Dockerfile.api
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       NODE_ENV: production
       PORT: "3001"
@@ -64,7 +66,9 @@ services:
       context: .
       dockerfile: Dockerfile.dashboard
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       NODE_ENV: production
       PORT: "3002"
@@ -92,7 +96,9 @@ services:
       context: .
       dockerfile: Dockerfile.admin
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     environment:
       NODE_ENV: production
       PORT: "3003"
@@ -141,7 +147,9 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    env_file: .env
+    env_file:
+      - path: .env
+        required: false
     networks:
       - internal
     depends_on:

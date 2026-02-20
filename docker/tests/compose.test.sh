@@ -86,14 +86,21 @@ done
 # ── Test 6: Health checks are defined ────────────────────────
 header "Health checks"
 
+# docker compose config emits YAML; we use a simple awk approach:
+# Look for the service block and then check if healthcheck appears
+# before the next top-level service key.
+COMPOSE_YAML=$(docker compose config 2>/dev/null)
+
 HEALTH_SERVICES=(api dashboard admin postgres)
 for svc in "${HEALTH_SERVICES[@]}"; do
-    if docker compose config 2>/dev/null | python3 -c "
-import sys, yaml
-cfg = yaml.safe_load(sys.stdin)
-svc = cfg.get('services', {}).get('${svc}', {})
-sys.exit(0 if 'healthcheck' in svc else 1)
-" 2>/dev/null; then
+    # Extract lines between "  <svc>:" and the next service at the same indent
+    # then check for "healthcheck"
+    if echo "$COMPOSE_YAML" | awk "
+        /^  ${svc}:/ { in_svc=1 }
+        in_svc && /^  [a-z]/ && !/^  ${svc}:/ { in_svc=0 }
+        in_svc && /healthcheck/ { found=1 }
+        END { exit (found ? 0 : 1) }
+    " 2>/dev/null; then
         pass "Service '${svc}' has a health check"
     else
         fail "Service '${svc}' is missing a health check"
