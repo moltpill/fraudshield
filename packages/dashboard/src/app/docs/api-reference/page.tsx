@@ -1,29 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Eye, BookOpen } from 'lucide-react'
+import { ApiReferenceReact } from '@scalar/api-reference-react'
+import '@scalar/api-reference-react/style.css'
 
 export default function ApiReferencePage() {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const scriptLoaded = useRef(false)
-
-  useEffect(() => {
-    // Only load Scalar once and don't remove it on unmount
-    if (scriptLoaded.current) return
-    if (document.querySelector('script[src*="@scalar/api-reference"]')) {
-      scriptLoaded.current = true
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
-    script.async = true
-    // Append to body after the config element
-    document.body.appendChild(script)
-    scriptLoaded.current = true
-  }, [])
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -58,31 +40,26 @@ export default function ApiReferencePage() {
       </header>
 
       {/* Scalar API Reference */}
-      <div ref={containerRef}>
-        <script
-          id="api-reference"
-          data-url="/api/openapi"
-          data-proxy-url="https://proxy.scalar.com"
-          dangerouslySetInnerHTML={{
-            __html: `
-              document.getElementById('api-reference').dataset.configuration = JSON.stringify({
-                theme: 'purple',
-                hideModels: false,
-                hideDownloadButton: false,
-                darkMode: true,
-                searchHotKey: 'k',
-                metaData: {
-                  title: 'The All Seeing Eyes API',
-                  description: 'See Everything. Trust No One. AI-Powered Fraud Detection API.',
-                },
-                authentication: {
-                  preferredSecurityScheme: 'bearerAuth',
-                  apiKey: {
-                    token: 'eye_live_your_api_key_here',
-                  },
-                },
-              })
-            `,
+      <div className="scalar-container">
+        <ApiReferenceReact
+          configuration={{
+            url: '/api/openapi',
+            proxyUrl: 'https://proxy.scalar.com',
+            theme: 'purple',
+            hideModels: false,
+            hideDownloadButton: false,
+            darkMode: true,
+            searchHotKey: 'k',
+            metaData: {
+              title: 'The All Seeing Eyes API',
+              description: 'See Everything. Trust No One. AI-Powered Fraud Detection API.',
+            },
+            authentication: {
+              preferredSecurityScheme: 'bearerAuth',
+              apiKey: {
+                token: 'eye_live_your_api_key_here',
+              },
+            },
           }}
         />
       </div>
@@ -108,6 +85,10 @@ export default function ApiReferencePage() {
         
         .scalar-app .scalar-api-client__send-request-button:hover {
           background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+        }
+        
+        .scalar-container {
+          height: calc(100vh - 73px);
         }
       `}</style>
     </div>
