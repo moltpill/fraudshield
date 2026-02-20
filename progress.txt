@@ -586,3 +586,69 @@ Started: Fri Feb 20 2026
 
 **Learning:** next-auth v5 (Auth.js) exports { handlers, auth, signIn, signOut } from a single auth.ts config file. Route handler at /api/auth/[...nextauth]/route.ts just re-exports handlers. Middleware uses the auth() wrapper function. In pnpm monorepo, point dashboard's Prisma to api's schema via "prisma": { "schema": "../api/prisma/schema.prisma" } in package.json.
 
+
+### STORY-030: Create dashboard layout with sidebar ✅
+- Fixed sidebar (desktop, 256px) with FraudShield logo and 5 nav items: Overview, Visitors, API Keys, Usage, Settings
+- Mobile-responsive header with hamburger button opening Sheet (Radix Dialog-based drawer)
+- SidebarNav client component uses usePathname() for active state highlighting
+- Account dropdown (UserNav) with user email, name, tier badge, sign out option
+- Dark mode toggle button in header using next-themes useTheme
+- ThemeProvider wraps root layout with attribute="class", enableSystem, disableTransitionOnChange
+- shadcn/ui components added: Sheet (Radix Dialog), DropdownMenu (Radix Dropdown), Avatar (Radix Avatar), Separator (Radix Separator)
+- Stub pages created for all nav destinations at /dashboard/visitors, /dashboard/api-keys, /dashboard/usage, /dashboard/settings
+- 19 new tests for SidebarNav (active state, hrefs, accessibility), UserNav (initials, sign out, theme toggle), Header (mobile menu)
+- 55 dashboard tests total, all passing
+
+**Learning:** For testing Next.js layout components with Radix UI portals (DropdownMenu, Sheet), mock those components entirely to avoid portal rendering issues in jsdom. Use Sheet's `open` prop in the mock to conditionally render content, allowing tests to verify the mobile sheet opens on hamburger click.
+
+
+### STORY-031: Dashboard overview page ✅
+- StatCard components: Visitors (30d), Requests Today, VPN %, Bot %
+- SVG line chart component (server-side, no client JS) for last 7 days
+- RecentVisitors table with links to visitor detail pages
+- Direct Prisma queries from server components (bypasses API auth issue)
+- Data fetching: getOverviewStats(), getLast7DaysUsage(), getRecentVisitors()
+- 14 tests for StatCard, RequestsChart, RecentVisitors
+
+### STORY-032: Visitors list page ✅
+- Table with ID (truncated+linked), First Seen, Last Seen, Visits, Risk badge
+- URL-based search/filter: ?search=, ?risk=high|medium|low, ?page=n
+- VisitorsFilters client component with Input + Select (updates URL)
+- Pagination component with prev/next buttons
+- getRiskLevel(): high ≥70, medium 30-69, low <30
+- 8 tests for getRiskLevel, Pagination component
+
+### STORY-033: Visitor detail page ✅
+- URL: /dashboard/visitors/[id]
+- Shows fingerprint (truncated), stats grid, detection flags (VPN/Tor/Bot/DC)
+- Event history table: timestamp, riskScore, IP, flags
+- 404 via notFound() for visitors not scoped to account
+
+### STORY-034: API keys management page ✅
+- ApiKeysManager client component with full CRUD interactions
+- Table: name, masked key (fs_live_•••••••...last4), created, status
+- Create modal: name → POST /api/keys → show key once with copy button
+- Inline name editing (click pencil, press Enter/Escape to save)
+- Revoke with confirmation dialog → PATCH status: 'revoked'
+- Next.js API routes: POST /api/keys, PATCH /api/keys/[id], DELETE /api/keys/[id]
+
+### STORY-035: Usage page ✅
+- Current month usage card with progress bar (green → yellow → red at 70%/90%)
+- Upgrade CTA banner when >= 70% usage
+- Daily usage chart (last 7 days) using shared RequestsChart component
+- Usage by API key breakdown table with percentage of total
+- Tier info panel with next tier CTA
+- Data from UsageRecord table + VisitorEvent aggregation per key
+
+### STORY-036: Settings page ✅
+- Profile form: edit name and email (PATCH /api/account)
+- Change password form: requires current password, bcrypt verify + re-hash
+- Webhook URL field (disabled, coming soon)
+- Current tier display
+- Danger zone: delete account button with "delete" text confirmation
+- Delete calls DELETE /api/account then signOut
+
+**Learning:** Dashboard server components query Prisma directly (not the HTTP API) because the API requires SDK API key auth. For the dashboard, use session.user.accountId to scope all Prisma queries. For Prisma imports: use named import { prisma } not default import. Prisma client generate needed before TypeScript type checking works.
+
+## PHASE 4 COMPLETE ✅
+
