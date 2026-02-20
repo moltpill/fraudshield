@@ -8,7 +8,7 @@ export function Sidebar() {
       <div className="flex h-16 items-center gap-2 px-6 border-b shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
-          <span>FraudShield</span>
+          <span>Sentinel</span>
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto py-4">

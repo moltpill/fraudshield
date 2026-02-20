@@ -1,4 +1,4 @@
-# Project Conventions — FraudShield
+# Project Conventions — Sentinel
 
 ## Stack
 - **Monorepo**: pnpm workspaces
@@ -41,7 +41,7 @@ packages/
 
 ### Types
 - Shared types in packages/shared/src/types/
-- Import types: `import type { Account } from '@fraudshield/shared'`
+- Import types: `import type { Account } from '@sentinel/shared'`
 
 ## Utilities
 

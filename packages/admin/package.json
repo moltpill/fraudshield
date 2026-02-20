@@ -1,5 +1,5 @@
 {
-  "name": "@fraudshield/admin",
+  "name": "@sentinel/admin",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "schema": "../api/prisma/schema.prisma"
   },
   "dependencies": {
-    "@fraudshield/shared": "workspace:*",
+    "@sentinel/shared": "workspace:*",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",

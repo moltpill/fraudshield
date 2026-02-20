@@ -62,7 +62,7 @@ export default function SignupPage() {
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2 text-primary">
             <Shield className="h-8 w-8" />
-            <span className="text-2xl font-bold">FraudShield</span>
+            <span className="text-2xl font-bold">Sentinel</span>
           </div>
         </div>
 

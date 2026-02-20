@@ -3,8 +3,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'FraudShield Admin',
-  description: 'Admin panel for FraudShield platform management',
+  title: 'Sentinel Admin',
+  description: 'Admin panel for Sentinel platform management',
 }
 
 export default function RootLayout({

@@ -50,7 +50,7 @@ export async function getCanvasFingerprint(): Promise<string> {
     ctx.fillStyle = '#069'
     ctx.font = '14px Arial'
     ctx.textBaseline = 'alphabetic'
-    ctx.fillText('FraudShield 🛡️ 2024', 2, 20)
+    ctx.fillText('Sentinel 🛡️ 2024', 2, 20)
 
     // Draw colored text (reveals color/antialiasing differences)
     ctx.fillStyle = 'rgba(102, 204, 0, 0.7)'

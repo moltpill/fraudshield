@@ -33,7 +33,7 @@ export function Header({ email, name, tier }: HeaderProps) {
       {/* Mobile logo */}
       <Link href="/dashboard" className="flex items-center gap-2 font-semibold md:hidden">
         <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span>FraudShield</span>
+        <span>Sentinel</span>
       </Link>
 
       {/* Spacer */}
@@ -48,7 +48,7 @@ export function Header({ email, name, tier }: HeaderProps) {
           <SheetHeader className="h-16 flex-row items-center gap-2 px-6 border-b space-y-0">
             <SheetTitle className="flex items-center gap-2 font-semibold text-base">
               <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
-              FraudShield
+              Sentinel
             </SheetTitle>
           </SheetHeader>
           <div className="py-4">

@@ -15,7 +15,7 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@fraudshield/*": ["packages/*/src"]
+      "@sentinel/*": ["packages/*/src"]
     }
   },
   "exclude": ["node_modules", "dist"]

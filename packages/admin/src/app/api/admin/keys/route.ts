@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import { generateApiKey } from '@fraudshield/shared'
+import { generateApiKey } from '@sentinel/shared'
 import { logAdminAction, AUDIT_ACTIONS } from '@/lib/audit-log'
 
 export async function POST(req: NextRequest) {

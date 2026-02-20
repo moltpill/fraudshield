@@ -185,7 +185,7 @@ export function SettingsForm({ accountId: _accountId, name, email, tier }: Setti
               type="url"
               value={webhookUrl}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWebhookUrl(e.target.value)}
-              placeholder="https://your-app.com/webhooks/fraudshield"
+              placeholder="https://your-app.com/webhooks/sentinel"
               disabled
             />
           </div>

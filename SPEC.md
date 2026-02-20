@@ -1,4 +1,4 @@
-# FraudShield SDK — Product Spec
+# Sentinel SDK — Product Spec
 
 *Fingerprinting & Device Intelligence SaaS*
 
@@ -88,7 +88,7 @@ A lightweight JavaScript SDK that collects browser/device signals to generate un
 
 ```html
 <!-- Async, non-blocking — API key required -->
-<script src="https://cdn.fraudshield.io/v1/sdk.min.js" 
+<script src="https://cdn.usesentinel.dev/v1/sdk.min.js" 
         data-api-key="fs_live_xxx"></script>
 
 <!-- Without valid key, SDK throws error -->
@@ -96,12 +96,12 @@ A lightweight JavaScript SDK that collects browser/device signals to generate un
 
 ```javascript
 // Or via npm (still requires API key)
-import { FraudShield } from '@fraudshield/sdk';
+import { Sentinel } from '@sentinel/sdk';
 
 // API key validated on init AND on every analyze() call
-const fs = new FraudShield({ 
+const fs = new Sentinel({ 
   apiKey: 'fs_live_xxx',  // Required
-  endpoint: 'https://api.fraudshield.io'  // Cannot be overridden to self-host
+  endpoint: 'https://api.usesentinel.dev'  // Cannot be overridden to self-host
 });
 
 // Every call hits our API — no local processing
@@ -112,17 +112,17 @@ const result = await fs.analyze();
 ### What Happens Without Valid Key
 ```javascript
 // Invalid/missing key
-const fs = new FraudShield({ apiKey: '' });
+const fs = new Sentinel({ apiKey: '' });
 await fs.analyze(); 
-// → throws FraudShieldError: "Invalid API key"
+// → throws SentinelError: "Invalid API key"
 
 // Over quota
 await fs.analyze();
-// → throws FraudShieldError: "Usage limit exceeded. Upgrade at dashboard.fraudshield.io"
+// → throws SentinelError: "Usage limit exceeded. Upgrade at dashboard.usesentinel.dev"
 
 // Suspended account
 await fs.analyze();
-// → throws FraudShieldError: "Account suspended. Contact support."
+// → throws SentinelError: "Account suspended. Contact support."
 ```
 
 ### SDK Architecture (Closed Core)
@@ -130,7 +130,7 @@ await fs.analyze();
 ┌─────────────────────────────────────────┐
 │           Client Browser                 │
 │  ┌───────────────────────────────────┐  │
-│  │     FraudShield SDK (minified)     │  │
+│  │     Sentinel SDK (minified)     │  │
 │  │  • Collects raw signals            │  │
 │  │  • Encrypts payload                │  │
 │  │  • Sends to API (required)         │  │
@@ -142,7 +142,7 @@ await fs.analyze();
                     │ API key in header
                     ▼
 ┌─────────────────────────────────────────┐
-│         FraudShield API (ours)           │
+│         Sentinel API (ours)           │
 │  • Validates API key                     │
 │  • Checks usage quota                    │
 │  • Computes fingerprint hash (secret)    │
@@ -206,7 +206,7 @@ await fs.analyze();
 ┌─────────────────────────────────────────────────────────┐
 │                     Client (Browser)                     │
 │  ┌─────────────────────────────────────────────────┐    │
-│  │            FraudShield SDK (5KB gzip)            │    │
+│  │            Sentinel SDK (5KB gzip)            │    │
 │  │  • Collect signals • Generate fingerprint hash   │    │
 │  │  • Encrypt payload • Send to API                 │    │
 │  └─────────────────────────────────────────────────┘    │
@@ -314,7 +314,7 @@ Private admin dashboard for us to manage the entire platform.
 ### Super Admin UI Wireframe
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  🛡️ FraudShield Admin                    [Search]  [@admin ▼]  │
+│  🛡️ Sentinel Admin                    [Search]  [@admin ▼]  │
 ├─────────────┬───────────────────────────────────────────────────┤
 │             │                                                   │
 │  Dashboard  │  📊 Platform Overview                             │
@@ -335,7 +335,7 @@ Private admin dashboard for us to manage the entire platform.
 - **Framework:** Next.js 15 (same as customer dashboard)
 - **Auth:** Separate admin auth (not shared with customers)
 - **Access:** IP allowlist + 2FA required
-- **Hosting:** Same infra, different subdomain (admin.fraudshield.io)
+- **Hosting:** Same infra, different subdomain (admin.usesentinel.dev)
 - **Audit:** Every action logged to separate audit table
 
 ---
@@ -440,7 +440,7 @@ Private admin dashboard for us to manage the entire platform.
 ### SDK Enforcement
 ```javascript
 // SDK initialization - REQUIRES valid API key
-const shield = new FraudShield({
+const shield = new Sentinel({
   apiKey: 'fs_live_xxxx'  // Required, validated server-side
 });
 

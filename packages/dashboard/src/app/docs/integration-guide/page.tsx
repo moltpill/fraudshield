@@ -28,9 +28,9 @@ import {
 } from '@/components/docs'
 
 export const metadata: Metadata = {
-  title: 'Integration Guide | FraudShield SDK',
+  title: 'Integration Guide | Sentinel SDK',
   description:
-    'Complete integration guide for FraudShield SDK. Learn how to detect fraud, bots, and suspicious visitors in your web application.',
+    'Complete integration guide for Sentinel SDK. Learn how to detect fraud, bots, and suspicious visitors in your web application.',
 }
 
 const API_URL = 'https://api-production-60cae.up.railway.app'
@@ -41,16 +41,16 @@ const API_URL = 'https://api-production-60cae.up.railway.app'
 
 // --- JavaScript/HTML (CDN) ---
 const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
-<script src="${API_URL}/sdk/fraudshield.min.js"></script>
+<script src="${API_URL}/sdk/sentinel.min.js"></script>
 
 <script>
-  // Initialize FraudShield
-  const fs = new FraudShield({
-    apiKey: 'fs_live_your_api_key_here'
+  // Initialize Sentinel
+  const sentinel = new Sentinel({
+    apiKey: 'stl_live_your_api_key_here'
   });
 
   // Analyze visitor on page load
-  fs.analyze().then(result => {
+  sentinel.analyze().then(result => {
     console.log('Visitor ID:', result.visitorId);
     console.log('Risk Score:', result.riskScore);
     console.log('Risk Level:', result.risk?.level);
@@ -60,33 +60,33 @@ const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
       showCaptcha();
     }
   }).catch(error => {
-    console.error('FraudShield error:', error);
+    console.error('Sentinel error:', error);
   });
 </script>`
 
 // --- React/Next.js ---
 const REACT_EXAMPLE = `import { useEffect, useState } from 'react';
-import { FraudShield } from '@fraudshield/sdk';
+import { Sentinel } from '@sentinel/sdk';
 
 export function FraudProtection({ children }) {
   const [visitor, setVisitor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fs = new FraudShield({
-      apiKey: process.env.NEXT_PUBLIC_FRAUDSHIELD_API_KEY,
+    const sentinel = new Sentinel({
+      apiKey: process.env.NEXT_PUBLIC_SENTINEL_API_KEY,
     });
 
-    fs.analyze()
+    sentinel.analyze()
       .then(result => {
         setVisitor(result);
         setLoading(false);
         
         // Store for later use
-        sessionStorage.setItem('fsVisitorId', result.visitorId);
+        sessionStorage.setItem('stlVisitorId', result.visitorId);
       })
       .catch(error => {
-        console.error('FraudShield error:', error);
+        console.error('Sentinel error:', error);
         setLoading(false);
       });
   }, []);
@@ -106,28 +106,28 @@ export function FraudProtection({ children }) {
 // --- Vue.js ---
 const VUE_EXAMPLE = `<script setup>
 import { ref, onMounted, provide } from 'vue';
-import { FraudShield } from '@fraudshield/sdk';
+import { Sentinel } from '@sentinel/sdk';
 
 const visitor = ref(null);
 const loading = ref(true);
 const error = ref(null);
 
 // Provide visitor info to child components
-provide('fraudshield', { visitor, loading });
+provide('sentinel', { visitor, loading });
 
 onMounted(async () => {
-  const fs = new FraudShield({
-    apiKey: import.meta.env.VITE_FRAUDSHIELD_API_KEY,
+  const sentinel = new Sentinel({
+    apiKey: import.meta.env.VITE_SENTINEL_API_KEY,
   });
 
   try {
-    visitor.value = await fs.analyze();
+    visitor.value = await sentinel.analyze();
     
     // Store for later API calls
-    sessionStorage.setItem('fsVisitorId', visitor.value.visitorId);
+    sessionStorage.setItem('stlVisitorId', visitor.value.visitorId);
   } catch (err) {
     error.value = err.message;
-    console.error('FraudShield error:', err);
+    console.error('Sentinel error:', err);
   } finally {
     loading.value = false;
   }
@@ -151,7 +151,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-FRAUDSHIELD_SECRET_KEY = os.environ.get('FRAUDSHIELD_SECRET_KEY')
+SENTINEL_SECRET_KEY = os.environ.get('SENTINEL_SECRET_KEY')
 API_URL = '${API_URL}'
 
 def verify_visitor(visitor_id: str, request_id: str) -> dict:
@@ -159,7 +159,7 @@ def verify_visitor(visitor_id: str, request_id: str) -> dict:
     response = requests.post(
         f'{API_URL}/v1/verify',
         headers={
-            'Authorization': f'Bearer {FRAUDSHIELD_SECRET_KEY}',
+            'Authorization': f'Bearer {SENTINEL_SECRET_KEY}',
             'Content-Type': 'application/json',
         },
         json={
@@ -202,7 +202,7 @@ import fetch from 'node-fetch';
 const app = express();
 app.use(express.json());
 
-const FRAUDSHIELD_SECRET_KEY = process.env.FRAUDSHIELD_SECRET_KEY;
+const SENTINEL_SECRET_KEY = process.env.SENTINEL_SECRET_KEY;
 const API_URL = '${API_URL}';
 
 // Middleware to verify visitor
@@ -217,14 +217,14 @@ async function verifyVisitor(req, res, next) {
     const response = await fetch(\`\${API_URL}/v1/verify\`, {
       method: 'POST',
       headers: {
-        'Authorization': \`Bearer \${FRAUDSHIELD_SECRET_KEY}\`,
+        'Authorization': \`Bearer \${SENTINEL_SECRET_KEY}\`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ visitorId, requestId }),
     });
     
     const verification = await response.json();
-    req.fraudshield = verification;
+    req.sentinel = verification;
     next();
   } catch (error) {
     console.error('Verification failed:', error);
@@ -234,7 +234,7 @@ async function verifyVisitor(req, res, next) {
 }
 
 app.post('/api/checkout', verifyVisitor, (req, res) => {
-  const { risk } = req.fraudshield || {};
+  const { risk } = req.sentinel || {};
   
   if (risk?.level === 'critical') {
     return res.status(403).json({
@@ -256,9 +256,9 @@ app.listen(3000);`
 
 // --- PHP ---
 const PHP_EXAMPLE = `<?php
-// FraudShield PHP Integration
+// Sentinel PHP Integration
 
-class FraudShield {
+class Sentinel {
     private string $secretKey;
     private string $apiUrl = '${API_URL}';
     
@@ -296,10 +296,10 @@ class FraudShield {
 }
 
 // Usage in checkout
-$fs = new FraudShield($_ENV['FRAUDSHIELD_SECRET_KEY']);
+$sentinel = new Sentinel($_ENV['SENTINEL_SECRET_KEY']);
 
 try {
-    $verification = $fs->verify($_POST['visitorId'], $_POST['requestId']);
+    $verification = $sentinel->verify($_POST['visitorId'], $_POST['requestId']);
     $riskLevel = $verification['risk']['level'] ?? 'unknown';
     
     if ($riskLevel === 'critical') {
@@ -313,7 +313,7 @@ try {
     
 } catch (Exception $e) {
     // Log error but don't block the user
-    error_log('FraudShield error: ' . $e->getMessage());
+    error_log('Sentinel error: ' . $e->getMessage());
     echo json_encode(['success' => true]);
 }`
 
@@ -322,7 +322,7 @@ const RUBY_EXAMPLE = `require 'net/http'
 require 'json'
 require 'uri'
 
-class FraudShield
+class Sentinel
   API_URL = '${API_URL}'
   
   def initialize(secret_key)
@@ -365,14 +365,14 @@ class CheckoutController < ApplicationController
   private
   
   def verify_visitor
-    fs = FraudShield.new(ENV['FRAUDSHIELD_SECRET_KEY'])
-    verification = fs.verify(
+    sentinel = Sentinel.new(ENV['SENTINEL_SECRET_KEY'])
+    verification = sentinel.verify(
       visitor_id: params[:visitorId],
       request_id: params[:requestId]
     )
     @risk_level = verification.dig('risk', 'level')
   rescue => e
-    Rails.logger.error("FraudShield error: #{e.message}")
+    Rails.logger.error("Sentinel error: #{e.message}")
     @risk_level = nil # Fail open
   end
 end`
@@ -408,7 +408,7 @@ type VerifyResponse struct {
 }
 
 func verifyVisitor(visitorID, requestID string) (*VerifyResponse, error) {
-    secretKey := os.Getenv("FRAUDSHIELD_SECRET_KEY")
+    secretKey := os.Getenv("SENTINEL_SECRET_KEY")
     
     payload, _ := json.Marshal(VerifyRequest{
         VisitorID: visitorID,
@@ -461,7 +461,7 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 const CURL_ANALYZE = `# Analyze a visitor (client-side SDK does this automatically)
 curl -X POST ${API_URL}/v1/analyze \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: fs_live_your_api_key_here" \\
+  -H "X-API-Key: stl_live_your_api_key_here" \\
   -d '{
     "signals": {
       "userAgent": "Mozilla/5.0...",
@@ -477,7 +477,7 @@ curl -X POST ${API_URL}/v1/analyze \\
 const CURL_VERIFY = `# Verify a visitor server-side
 curl -X POST ${API_URL}/v1/verify \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer fs_secret_your_secret_key" \\
+  -H "Authorization: Bearer stl_secret_your_secret_key" \\
   -d '{
     "visitorId": "fp_a1b2c3d4e5f6g7h8i9j0",
     "requestId": "req_xyz123abc456"
@@ -572,7 +572,7 @@ const ERROR_EXAMPLES = [
     response: `{
   "error": {
     "code": "SUSPENDED",
-    "message": "Account suspended. Contact support@fraudshield.dev"
+    "message": "Account suspended. Contact support@usesentinel.dev"
   }
 }`,
   },
@@ -673,8 +673,10 @@ export default function IntegrationGuidePage() {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <Shield className="h-6 w-6 text-primary" />
-            FraudShield
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-primary/80">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span>Sentinel</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link
@@ -688,6 +690,12 @@ export default function IntegrationGuidePage() {
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Pricing
+            </Link>
+            <Link
+              href="/docs/api-reference"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              API Reference
             </Link>
             <Link
               href="/signup"
@@ -738,10 +746,10 @@ export default function IntegrationGuidePage() {
               <div className="mt-4 p-4 rounded-lg border bg-muted/30">
                 <p className="text-sm font-medium mb-2">Need help?</p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Our team is here to help you integrate FraudShield.
+                  Our team is here to help you integrate Sentinel.
                 </p>
                 <a
-                  href="mailto:support@fraudshield.dev"
+                  href="mailto:support@usesentinel.dev"
                   className="text-xs text-primary hover:underline"
                 >
                   Contact support →
@@ -762,7 +770,7 @@ export default function IntegrationGuidePage() {
                 Integration Guide
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                Learn how to integrate FraudShield SDK into your application.
+                Learn how to integrate Sentinel SDK into your application.
                 Add browser fingerprinting and fraud detection in{' '}
                 <strong className="text-foreground">under 5 minutes</strong>.
               </p>
@@ -847,7 +855,7 @@ export default function IntegrationGuidePage() {
                       CDN (Recommended for quick start)
                     </h3>
                     <CodeBlock
-                      code={`<script src="${API_URL}/sdk/fraudshield.min.js"></script>`}
+                      code={`<script src="${API_URL}/sdk/sentinel.min.js"></script>`}
                       language="html"
                     />
                   </div>
@@ -857,7 +865,7 @@ export default function IntegrationGuidePage() {
                       <Terminal className="h-4 w-4 text-muted-foreground" />
                       Package Manager
                     </h3>
-                    <InstallTabs packageName="@fraudshield/sdk" />
+                    <InstallTabs packageName="@sentinel/sdk" />
                   </div>
                 </div>
 
@@ -871,7 +879,7 @@ export default function IntegrationGuidePage() {
               <Section
                 id="client-examples"
                 title="Client Integration"
-                description="Integrate FraudShield into your frontend application using your preferred framework."
+                description="Integrate Sentinel into your frontend application using your preferred framework."
               >
                 <LanguageTabs
                   examples={[
@@ -907,7 +915,7 @@ export default function IntegrationGuidePage() {
                 description="Verify visitors server-side using your secret API key. Prevents client-side tampering."
               >
                 <Callout type="security" title="Use your secret key server-side">
-                  Never expose your <code className="text-xs bg-muted px-1.5 py-0.5 rounded">fs_secret_*</code>{' '}
+                  Never expose your <code className="text-xs bg-muted px-1.5 py-0.5 rounded">stl_secret_*</code>{' '}
                   key in client-side code. It should only be used on your server
                   for verification.
                 </Callout>
@@ -955,14 +963,27 @@ export default function IntegrationGuidePage() {
               <Section
                 id="api-reference"
                 title="API Reference"
-                description="Complete reference for the FraudShield API endpoints."
+                description="Complete reference for the Sentinel API endpoints."
               >
+                <div className="mb-6 p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-transparent">
+                  <p className="text-sm mb-3">
+                    For interactive API documentation with a "Try it" feature, check out our OpenAPI reference:
+                  </p>
+                  <Link
+                    href="/docs/api-reference"
+                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                  >
+                    View Interactive API Docs
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+
                 <div className="space-y-8">
                   {/* Constructor */}
                   <div className="border rounded-lg overflow-hidden">
                     <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
                       <code className="text-sm font-semibold">
-                        new FraudShield(options)
+                        new Sentinel(options)
                       </code>
                       <span className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded">
                         Constructor
@@ -970,7 +991,7 @@ export default function IntegrationGuidePage() {
                     </div>
                     <div className="p-4">
                       <p className="text-sm text-muted-foreground mb-4">
-                        Creates a new FraudShield client instance.
+                        Creates a new Sentinel client instance.
                       </p>
                       <h4 className="text-sm font-semibold mb-2">Options</h4>
                       <div className="border rounded-md divide-y text-sm">
@@ -981,8 +1002,8 @@ export default function IntegrationGuidePage() {
                               required
                             </span>
                             <span className="text-muted-foreground">
-                              Your API key (starts with <code>fs_live_</code> or{' '}
-                              <code>fs_test_</code>)
+                              Your API key (starts with <code>stl_live_</code> or{' '}
+                              <code>stl_test_</code>)
                             </span>
                           </div>
                         </div>
@@ -1005,7 +1026,7 @@ export default function IntegrationGuidePage() {
                   <div className="border rounded-lg overflow-hidden">
                     <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
                       <code className="text-sm font-semibold">
-                        fs.analyze(): Promise&lt;AnalyzeResponse&gt;
+                        sentinel.analyze(): Promise&lt;AnalyzeResponse&gt;
                       </code>
                       <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
                         Method
@@ -1192,7 +1213,7 @@ export default function IntegrationGuidePage() {
                 <ErrorTable errors={ERROR_EXAMPLES} />
 
                 <Callout type="warning" title="Fail-Open Design">
-                  Always implement a fail-open strategy. If FraudShield
+                  Always implement a fail-open strategy. If Sentinel
                   encounters an error, allow the user to proceed rather than
                   blocking them. Use fraud detection to add friction (CAPTCHA,
                   verification), not to deny access entirely.
@@ -1203,7 +1224,7 @@ export default function IntegrationGuidePage() {
               <Section
                 id="best-practices"
                 title="Best Practices"
-                description="Tips for getting the most out of FraudShield."
+                description="Tips for getting the most out of Sentinel."
               >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FeatureCard
@@ -1219,7 +1240,7 @@ export default function IntegrationGuidePage() {
                   <FeatureCard
                     icon={Lock}
                     title="Protect your keys"
-                    description="Publishable key (fs_live_*) is safe client-side. Keep secret key (fs_secret_*) on server only."
+                    description="Publishable key (stl_live_*) is safe client-side. Keep secret key (stl_secret_*) on server only."
                   />
                   <FeatureCard
                     icon={Zap}
@@ -1276,7 +1297,7 @@ export default function IntegrationGuidePage() {
         <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span>FraudShield © {new Date().getFullYear()}</span>
+            <span>Sentinel © {new Date().getFullYear()}</span>
           </div>
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-foreground transition-colors">
@@ -1289,7 +1310,7 @@ export default function IntegrationGuidePage() {
               Pricing
             </Link>
             <a
-              href="mailto:support@fraudshield.dev"
+              href="mailto:support@usesentinel.dev"
               className="hover:text-foreground transition-colors"
             >
               Support

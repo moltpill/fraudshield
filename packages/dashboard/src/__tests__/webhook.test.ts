@@ -135,7 +135,7 @@ describe('Stitch webhook endpoint', () => {
       type: 'payment.completed',
       data: {
         paymentId: 'stitch-pay-001',
-        merchantReference: 'fraudshield-starter-acc-001-1234567890',
+        merchantReference: 'sentinel-starter-acc-001-1234567890',
         payerId: 'acc-001',
         amount: 14900,
       },
@@ -169,7 +169,7 @@ describe('Stitch webhook endpoint', () => {
       type: 'payment.completed',
       data: {
         paymentId: 'stitch-pay-002',
-        merchantReference: 'fraudshield-growth-acc-002-1234567890',
+        merchantReference: 'sentinel-growth-acc-002-1234567890',
         payerId: 'acc-001',
         amount: 39900,
       },

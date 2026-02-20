@@ -23,9 +23,6 @@ importers:
 
   packages/admin:
     dependencies:
-      '@fraudshield/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -50,6 +47,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.2.4(@types/react@19.2.14)(react@19.2.4)
+      '@sentinel/shared':
+        specifier: workspace:*
+        version: link:../shared
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -104,7 +104,7 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       '@vitejs/plugin-react':
         specifier: ^4.0.0
-        version: 4.7.0(vite@7.3.1(@types/node@20.19.33)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 4.7.0(vite@7.3.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.24(postcss@8.5.6)
@@ -125,19 +125,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.0
-        version: 3.2.4(@types/node@20.19.33)(jiti@2.6.1)(jsdom@25.0.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/node@20.19.33)(jiti@1.21.7)(jsdom@25.0.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/api:
     dependencies:
-      '@fraudshield/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@hono/node-server':
         specifier: ^1.19.9
         version: 1.19.9(hono@4.12.0)
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@sentinel/shared':
+        specifier: workspace:*
+        version: link:../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -163,9 +163,6 @@ importers:
 
   packages/dashboard:
     dependencies:
-      '@fraudshield/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -193,6 +190,9 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@sentinel/shared':
+        specifier: workspace:*
+        version: link:../shared
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -253,7 +253,7 @@ importers:
         version: 19.2.3(@types/react@19.2.14)
       '@vitejs/plugin-react':
         specifier: ^4.0.0
-        version: 4.7.0(vite@7.3.1(@types/node@20.19.33)(jiti@1.21.7)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+        version: 4.7.0(vite@7.3.1(@types/node@20.19.33)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       autoprefixer:
         specifier: ^10.4.0
         version: 10.4.24(postcss@8.5.6)
@@ -274,11 +274,11 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.0
-        version: 3.2.4(@types/node@20.19.33)(jiti@1.21.7)(jsdom@25.0.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/node@20.19.33)(jiti@2.6.1)(jsdom@25.0.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/sdk:
     dependencies:
-      '@fraudshield/shared':
+      '@sentinel/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:

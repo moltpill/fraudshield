@@ -71,7 +71,7 @@ describe('POST /api/billing/checkout', () => {
       email: 'user@example.com',
       payerId: 'acc-001',
       startDate: '2026-03-01T00:00:00Z',
-      merchantReference: 'fraudshield-starter-acc-001-xxx',
+      merchantReference: 'sentinel-starter-acc-001-xxx',
     })
   })
 

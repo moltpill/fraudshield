@@ -73,20 +73,22 @@ describe('SDK Build', () => {
   })
 
   describe('UMD Bundle', () => {
-    it('UMD bundle exposes FraudShield global', () => {
+    it('UMD bundle exposes Sentinel global', () => {
       const content = readFileSync(resolve(distDir, 'sdk.umd.js'), 'utf-8')
-      // UMD should set window.FraudShield or global.FraudShield
-      expect(content).toContain('FraudShield')
+      // UMD should set window.Sentinel or global.Sentinel
+      expect(content).toContain('Sentinel')
       // Check for UMD wrapper pattern
       expect(content).toMatch(/typeof exports.*typeof module|typeof define.*define\.amd/)
     })
 
     it('UMD bundle has named exports', () => {
       const content = readFileSync(resolve(distDir, 'sdk.umd.js'), 'utf-8')
-      // Should export FraudShield class and other public APIs
-      expect(content).toContain('FraudShield')
-      expect(content).toContain('FraudShieldError')
+      // Should export Sentinel class and other public APIs
+      expect(content).toContain('Sentinel')
+      expect(content).toContain('SentinelError')
       expect(content).toContain('ErrorCode')
+      // Should also have legacy aliases
+      expect(content).toContain('FraudShield')
     })
 
     it('minified UMD works via script tag pattern', () => {

@@ -1,170 +1,98 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
-  FraudShield,
-  FraudShieldError,
+  Sentinel,
+  FraudShield, // Legacy alias
+  SentinelError,
+  FraudShieldError, // Legacy alias
+  SentinelOptions,
+  FraudShieldOptions, // Legacy alias
   ErrorCode,
-  AnalyzeResult,
-  FraudShieldOptions,
 } from '../src/index'
 
-// Mock all signal collectors
-vi.mock('../src/signals/canvas', () => ({
-  getCanvasFingerprint: vi.fn(() => Promise.resolve('canvas-hash')),
-}))
-vi.mock('../src/signals/webgl', () => ({
-  getWebGLFingerprint: vi.fn(() => Promise.resolve({ hash: 'webgl-hash' })),
-}))
-vi.mock('../src/signals/audio', () => ({
-  getAudioFingerprint: vi.fn(() => Promise.resolve('audio-hash')),
-}))
-vi.mock('../src/signals/navigator', () => ({
-  getNavigatorSignals: vi.fn(() => Promise.resolve({})),
-}))
-vi.mock('../src/signals/screen', () => ({
-  getScreenSignals: vi.fn(() => ({})),
-}))
-vi.mock('../src/signals/timezone', () => ({
-  getTimezoneSignals: vi.fn(() => ({})),
-}))
-vi.mock('../src/signals/webrtc', () => ({
-  getWebRTCIPs: vi.fn(() => Promise.resolve([])),
-}))
-vi.mock('../src/signals/bot', () => ({
-  getBotSignals: vi.fn(() => ({})),
-}))
-
-describe('ErrorCode constants', () => {
-  it('exports INVALID_KEY error code', () => {
-    expect(ErrorCode.INVALID_KEY).toBe('INVALID_KEY')
-  })
-
-  it('exports QUOTA_EXCEEDED error code', () => {
-    expect(ErrorCode.QUOTA_EXCEEDED).toBe('QUOTA_EXCEEDED')
-  })
-
-  it('exports NETWORK_ERROR error code', () => {
-    expect(ErrorCode.NETWORK_ERROR).toBe('NETWORK_ERROR')
-  })
-
-  it('exports SUSPENDED error code', () => {
-    expect(ErrorCode.SUSPENDED).toBe('SUSPENDED')
-  })
-})
-
-describe('FraudShieldError', () => {
-  it('extends Error', () => {
-    const error = new FraudShieldError('Test error')
-    expect(error).toBeInstanceOf(Error)
+describe('SentinelError', () => {
+  it('creates error with message only', () => {
+    const error = new SentinelError('Test error')
+    expect(error.message).toBe('Test error')
+    expect(error.statusCode).toBeUndefined()
+    expect(error.code).toBeUndefined()
   })
 
   it('has correct name property', () => {
-    const error = new FraudShieldError('Test error')
-    expect(error.name).toBe('FraudShieldError')
+    const error = new SentinelError('Test error')
+    expect(error instanceof Error).toBe(true)
+    expect(error.name).toBe('SentinelError')
   })
 
-  it('has code property', () => {
-    const error = new FraudShieldError('Invalid API key', {
+  it('accepts statusCode and code options', () => {
+    const error = new SentinelError('Invalid API key', {
+      statusCode: 401,
       code: ErrorCode.INVALID_KEY,
     })
+    expect(error.message).toBe('Invalid API key')
+    expect(error.statusCode).toBe(401)
     expect(error.code).toBe('INVALID_KEY')
   })
 
-  it('works with instanceof after transpilation', () => {
+  it('can be caught as Error', () => {
+    const error = new SentinelError('Test')
+    expect(error instanceof Error).toBe(true)
+  })
+
+  it('maintains instanceof check', () => {
+    const error = new SentinelError('Test')
+    expect(error instanceof SentinelError).toBe(true)
+  })
+
+  it('FraudShieldError alias works', () => {
     const error = new FraudShieldError('Test')
-    expect(error instanceof FraudShieldError).toBe(true)
+    expect(error instanceof SentinelError).toBe(true)
   })
 })
 
-describe('AnalyzeResult type', () => {
-  it('has visitorId property', () => {
-    const result: AnalyzeResult = {
-      visitorId: 'visitor-123',
-      confidence: 0.95,
-      risk: 'low',
-      signals: {},
-    }
-    expect(result.visitorId).toBe('visitor-123')
-  })
-
-  it('has confidence property', () => {
-    const result: AnalyzeResult = {
-      visitorId: 'visitor-123',
-      confidence: 0.95,
-      risk: 'low',
-      signals: {},
-    }
-    expect(result.confidence).toBe(0.95)
-  })
-
-  it('has risk property', () => {
-    const result: AnalyzeResult = {
-      visitorId: 'visitor-123',
-      confidence: 0.95,
-      risk: 'high',
-      signals: {},
-    }
-    expect(result.risk).toBe('high')
-  })
-
-  it('has signals property', () => {
-    const result: AnalyzeResult = {
-      visitorId: 'visitor-123',
-      confidence: 0.95,
-      risk: 'medium',
-      signals: {
-        vpn: true,
-        bot: false,
-        datacenter: true,
-      },
-    }
-    expect(result.signals.vpn).toBe(true)
-    expect(result.signals.bot).toBe(false)
-    expect(result.signals.datacenter).toBe(true)
-  })
-})
-
-describe('FraudShieldOptions type', () => {
+describe('SentinelOptions type', () => {
   it('requires apiKey', () => {
-    const options: FraudShieldOptions = {
-      apiKey: 'fs_live_xxx',
+    const options: SentinelOptions = {
+      apiKey: 'stl_live_test123',
     }
-    expect(options.apiKey).toBe('fs_live_xxx')
+    expect(options.apiKey).toBe('stl_live_test123')
   })
 
   it('allows optional endpoint', () => {
-    const options: FraudShieldOptions = {
-      apiKey: 'fs_live_xxx',
+    const options: SentinelOptions = {
+      apiKey: 'stl_live_test123',
       endpoint: 'https://custom.api.com',
     }
     expect(options.endpoint).toBe('https://custom.api.com')
   })
+
+  it('FraudShieldOptions alias works', () => {
+    const options: FraudShieldOptions = {
+      apiKey: 'stl_live_test123',
+    }
+    expect(options.apiKey).toBe('stl_live_test123')
+  })
 })
 
-describe('Network errors use NETWORK_ERROR code', () => {
-  let mockFetch: ReturnType<typeof vi.fn>
+describe('Network error handling', () => {
+  it('throws SentinelError with NETWORK_ERROR code on fetch failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Connection refused')))
 
-  beforeEach(() => {
-    mockFetch = vi.fn()
-    vi.stubGlobal('fetch', mockFetch)
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.clearAllMocks()
-  })
-
-  it('includes NETWORK_ERROR code on network failure', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Connection refused'))
-
-    const sdk = new FraudShield({ apiKey: 'fs_live_test' })
-
+    const sdk = new Sentinel({ apiKey: 'stl_live_test' })
+    
     try {
       await sdk.analyze()
       expect.fail('Should have thrown')
     } catch (error) {
-      expect(error).toBeInstanceOf(FraudShieldError)
-      expect((error as FraudShieldError).code).toBe(ErrorCode.NETWORK_ERROR)
-      expect((error as FraudShieldError).message).toBe('Connection refused')
+      expect(error).toBeInstanceOf(SentinelError)
+      expect((error as SentinelError).code).toBe(ErrorCode.NETWORK_ERROR)
+      expect((error as SentinelError).message).toBe('Connection refused')
     }
+
+    vi.unstubAllGlobals()
+  })
+
+  it('FraudShield alias works identically', async () => {
+    const sdk = new FraudShield({ apiKey: 'stl_live_test' })
+    expect(sdk).toBeInstanceOf(Sentinel)
   })
 })

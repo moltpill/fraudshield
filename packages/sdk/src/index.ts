@@ -4,7 +4,7 @@ export { getBotSignals } from './signals/bot'
 export type { BotSignals } from './signals/bot'
 
 /**
- * Standard error codes returned by the FraudShield API
+ * Standard error codes returned by the Sentinel API
  */
 export const ErrorCode = {
   /** API key is invalid or not found */
@@ -46,40 +46,46 @@ import { getWebRTCIPs } from './signals/webrtc'
 import { getBotSignals } from './signals/bot'
 
 /**
- * Error options for FraudShieldError
+ * Error options for SentinelError
  */
-export interface FraudShieldErrorOptions {
+export interface SentinelErrorOptions {
   statusCode?: number
   code?: string
 }
 
 /**
- * Custom error class for FraudShield SDK errors
+ * Custom error class for Sentinel SDK errors
  */
-export class FraudShieldError extends Error {
+export class SentinelError extends Error {
   readonly statusCode?: number
   readonly code?: string
 
-  constructor(message: string, options?: FraudShieldErrorOptions) {
+  constructor(message: string, options?: SentinelErrorOptions) {
     super(message)
-    this.name = 'FraudShieldError'
+    this.name = 'SentinelError'
     this.statusCode = options?.statusCode
     this.code = options?.code
 
     // Fix prototype chain for instanceof checks
-    Object.setPrototypeOf(this, FraudShieldError.prototype)
+    Object.setPrototypeOf(this, SentinelError.prototype)
   }
 }
 
+// Legacy alias for backwards compatibility
+export { SentinelError as FraudShieldError }
+
 /**
- * FraudShield SDK configuration options
+ * Sentinel SDK configuration options
  */
-export interface FraudShieldOptions {
+export interface SentinelOptions {
   /** API key for authentication (required) */
   apiKey: string
   /** Custom API endpoint (optional) */
   endpoint?: string
 }
+
+// Legacy alias
+export type FraudShieldOptions = SentinelOptions
 
 /**
  * Response from the analyze API
@@ -93,28 +99,28 @@ export interface AnalyzeResponse {
 }
 
 /**
- * FraudShield SDK main class
+ * Sentinel SDK main class - AI-Powered Fraud Detection
  * 
  * @example
  * ```ts
- * const sdk = new FraudShield({ apiKey: 'fs_live_xxx' })
+ * const sdk = new Sentinel({ apiKey: 'stl_live_xxx' })
  * const result = await sdk.analyze()
  * console.log(result.visitorId, result.riskScore)
  * ```
  */
-export class FraudShield {
+export class Sentinel {
   private readonly _apiKey: string
   private readonly _endpoint: string
 
-  private static readonly DEFAULT_ENDPOINT = 'https://api.fraudshield.io'
+  private static readonly DEFAULT_ENDPOINT = 'https://api.usesentinel.dev'
 
-  constructor(options: FraudShieldOptions) {
+  constructor(options: SentinelOptions) {
     if (!options.apiKey || options.apiKey.trim() === '') {
       throw new Error('apiKey is required')
     }
 
     this._apiKey = options.apiKey
-    this._endpoint = options.endpoint ?? FraudShield.DEFAULT_ENDPOINT
+    this._endpoint = options.endpoint ?? Sentinel.DEFAULT_ENDPOINT
   }
 
   /** Get the configured endpoint */
@@ -134,10 +140,10 @@ export class FraudShield {
    * Analyze the current browser/device and return fraud detection results
    * 
    * Collects all signals (canvas, webgl, audio, navigator, screen, timezone,
-   * WebRTC IPs, bot signals) and sends them to the FraudShield API.
+   * WebRTC IPs, bot signals) and sends them to the Sentinel API.
    * 
    * @returns Promise<AnalyzeResponse> - The analysis result from the API
-   * @throws {FraudShieldError} On network errors or API error responses
+   * @throws {SentinelError} On network errors or API error responses
    * 
    * @example
    * ```ts
@@ -146,7 +152,7 @@ export class FraudShield {
    *   console.log('Visitor ID:', result.visitorId)
    *   console.log('Risk Score:', result.riskScore)
    * } catch (error) {
-   *   if (error instanceof FraudShieldError) {
+   *   if (error instanceof SentinelError) {
    *     console.error('API Error:', error.code, error.message)
    *   }
    * }
@@ -193,7 +199,7 @@ export class FraudShield {
     } catch (error) {
       // Network error
       const message = error instanceof Error ? error.message : 'Network error'
-      throw new FraudShieldError(message, { code: ErrorCode.NETWORK_ERROR })
+      throw new SentinelError(message, { code: ErrorCode.NETWORK_ERROR })
     }
 
     if (!response.ok) {
@@ -206,7 +212,7 @@ export class FraudShield {
       }
 
       const message = errorData.error || `HTTP ${response.status} error`
-      throw new FraudShieldError(message, {
+      throw new SentinelError(message, {
         statusCode: response.status,
         code: errorData.code,
       })
@@ -216,3 +222,6 @@ export class FraudShield {
     return response.json()
   }
 }
+
+// Legacy alias for backwards compatibility
+export { Sentinel as FraudShield }

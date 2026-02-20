@@ -3,8 +3,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'FraudShield Dashboard',
-  description: 'Monitor and manage fraud detection for your applications',
+  title: 'Sentinel Dashboard',
+  description: 'AI-powered fraud detection - Monitor and protect your applications',
 }
 
 export default function RootLayout({

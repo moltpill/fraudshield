@@ -138,6 +138,29 @@ function loadSdkContent(): string | null {
   return null;
 }
 
+// Serve SDK at new path
+app.get('/sdk/sentinel.min.js', (c) => {
+  const content = loadSdkContent();
+  
+  if (!content) {
+    return c.json({ error: 'SDK not available', code: 'SDK_NOT_FOUND' }, 404);
+  }
+  
+  // Handle conditional requests
+  const ifNoneMatch = c.req.header('If-None-Match');
+  if (ifNoneMatch && sdkContentEtag && ifNoneMatch === sdkContentEtag) {
+    return c.body(null, 304);
+  }
+  
+  return c.body(content, 200, {
+    'Content-Type': 'application/javascript; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+    'ETag': sdkContentEtag || '',
+    'Access-Control-Allow-Origin': '*',
+  });
+});
+
+// Legacy path for backwards compatibility
 app.get('/sdk/fraudshield.min.js', (c) => {
   const content = loadSdkContent();
   

@@ -57,9 +57,9 @@ export default function OnboardingPage() {
     }
   }
 
-  const snippet = `<script src="https://cdn.fraudshield.dev/sdk/v1/fraudshield.min.js"></script>
+  const snippet = `<script src="https://cdn.sentinel.dev/sdk/v1/sentinel.min.js"></script>
 <script>
-  const fs = new FraudShield({ apiKey: '${apiKey ?? 'fs_live_...'}' });
+  const fs = new Sentinel({ apiKey: '${apiKey ?? 'stl_live_...'}' });
   const result = await fs.analyze();
   console.log(result.risk.level); // 'low' | 'medium' | 'high' | 'critical'
 </script>`
@@ -71,7 +71,7 @@ export default function OnboardingPage() {
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2 text-primary">
             <Shield className="h-8 w-8" />
-            <span className="text-2xl font-bold">FraudShield</span>
+            <span className="text-2xl font-bold">Sentinel</span>
           </div>
         </div>
 
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
               </div>
               <CardTitle>Create your first API key</CardTitle>
               <CardDescription>
-                Your API key authenticates requests from your application to FraudShield.
+                Your API key authenticates requests from your application to Sentinel.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
                 <Code className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground">Step 2 of 3</span>
               </div>
-              <CardTitle>Add FraudShield to your site</CardTitle>
+              <CardTitle>Add Sentinel to your site</CardTitle>
               <CardDescription>
                 Copy your API key and add the SDK snippet to your page.
               </CardDescription>
@@ -200,7 +200,7 @@ export default function OnboardingPage() {
               </div>
               <CardTitle>You&apos;re all set!</CardTitle>
               <CardDescription>
-                FraudShield will start detecting fraud as soon as visitors load your page.
+                Sentinel will start detecting fraud as soon as visitors load your page.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

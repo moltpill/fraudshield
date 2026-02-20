@@ -11,9 +11,9 @@ const STITCH_SUB_STATUS_MAP: Record<string, string> = {
   UNAUTHORISED: 'pending',
 }
 
-// Tier derived from merchant reference: fraudshield-{tier}-{accountId}-{ts}
+// Tier derived from merchant reference: sentinel-{tier}-{accountId}-{ts}
 function extractTierFromRef(merchantReference: string): string | null {
-  const match = merchantReference.match(/^fraudshield-(\w+)-/)
+  const match = merchantReference.match(/^sentinel-(\w+)-/)
   if (!match) return null
   return match[1].toUpperCase()
 }

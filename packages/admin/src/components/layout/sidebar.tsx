@@ -8,7 +8,7 @@ export function AdminSidebar() {
       <div className="flex h-16 items-center gap-2 px-6 border-b shrink-0">
         <Link href="/admin" className="flex items-center gap-2 font-semibold">
           <ShieldAlert className="h-5 w-5 text-primary" aria-hidden="true" />
-          <span>FraudShield</span>
+          <span>Sentinel</span>
           <span className="text-xs text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded">ADMIN</span>
         </Link>
       </div>

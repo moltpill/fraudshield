@@ -1,44 +1,44 @@
-# FraudShield SDK Integration Guide
+# Sentinel SDK Integration Guide
 
 ## Quick Start
 
-FraudShield detects bots, VPNs, Tor, and suspicious browser behaviour by collecting
+Sentinel detects bots, VPNs, Tor, and suspicious browser behaviour by collecting
 browser signals and running them through our detection engine.
 
 ### 1. Get an API Key
 
-Sign up at [fraudshield.dev](https://fraudshield.dev) and create an API key from your
-dashboard. API keys look like: `fs_live_abcd1234567890abcd1234567890ab`
+Sign up at [usesentinel.dev](https://usesentinel.dev) and create an API key from your
+dashboard. API keys look like: `stl_live_abcd1234567890abcd1234567890ab`
 
 ### 2. Add the SDK
 
 #### Via Script Tag (easiest)
 
 ```html
-<script src="https://cdn.fraudshield.dev/sdk/v1/fraudshield.min.js"></script>
+<script src="https://cdn.usesentinel.dev/sdk/v1/sentinel.min.js"></script>
 <script>
-  const fs = new FraudShield({ apiKey: 'fs_live_YOUR_KEY' });
+  const sentinel = new Sentinel({ apiKey: 'stl_live_YOUR_KEY' });
 </script>
 ```
 
 #### Via npm
 
 ```bash
-npm install @fraudshield/sdk
+npm install @sentinel/sdk
 # or
-pnpm add @fraudshield/sdk
+pnpm add @sentinel/sdk
 ```
 
 ```javascript
-import { FraudShield } from '@fraudshield/sdk';
+import { Sentinel } from '@sentinel/sdk';
 
-const fs = new FraudShield({ apiKey: 'fs_live_YOUR_KEY' });
+const sentinel = new Sentinel({ apiKey: 'stl_live_YOUR_KEY' });
 ```
 
 ### 3. Analyze a Visitor
 
 ```javascript
-const result = await fs.analyze();
+const result = await sentinel.analyze();
 
 console.log(result.visitorId);        // stable ID across sessions
 console.log(result.risk.score);       // 0-100
@@ -55,12 +55,12 @@ console.log(result.signals.tor);      // true if Tor exit node
 ### Configuration Options
 
 ```javascript
-const fs = new FraudShield({
+const sentinel = new Sentinel({
   // Required
-  apiKey: 'fs_live_YOUR_KEY',
+  apiKey: 'stl_live_YOUR_KEY',
 
   // Optional
-  endpoint: 'https://api.fraudshield.dev', // default
+  endpoint: 'https://api.usesentinel.dev', // default
   timeout: 5000,                            // ms, default 5000
   debug: false,                             // log signal collection
 });
@@ -68,7 +68,7 @@ const fs = new FraudShield({
 
 ### The `analyze()` Method
 
-`analyze()` collects browser signals and sends them to the FraudShield API.
+`analyze()` collects browser signals and sends them to the Sentinel API.
 It returns a Promise that resolves with the full detection result.
 
 ```typescript
@@ -116,16 +116,16 @@ interface AnalyzeResult {
 
 ```tsx
 import { useEffect, useState } from 'react';
-import { FraudShield } from '@fraudshield/sdk';
+import { Sentinel } from '@sentinel/sdk';
 
-const fs = new FraudShield({ apiKey: process.env.NEXT_PUBLIC_FRAUDSHIELD_KEY! });
+const sentinel = new Sentinel({ apiKey: process.env.NEXT_PUBLIC_SENTINEL_KEY! });
 
 function CheckoutForm() {
   const [risk, setRisk] = useState<{ level: string; score: number } | null>(null);
   const [visitorId, setVisitorId] = useState<string | null>(null);
 
   useEffect(() => {
-    fs.analyze().then((result) => {
+    sentinel.analyze().then((result) => {
       setRisk(result.risk);
       setVisitorId(result.visitorId);
     });
@@ -160,7 +160,7 @@ function CheckoutForm() {
 
 ### Next.js (App Router)
 
-For server-side integration, call the FraudShield API directly from your API route
+For server-side integration, call the Sentinel API directly from your API route
 after receiving the `visitorId` from the client:
 
 ```typescript
@@ -170,7 +170,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   const { visitorId } = await req.json();
 
-  // Look up visitor risk from your database or re-query FraudShield
+  // Look up visitor risk from your database or re-query Sentinel
   // The visitorId is stable — store it alongside your user/order records
 
   // Block critical risk
@@ -189,21 +189,21 @@ export async function POST(req: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://cdn.fraudshield.dev/sdk/v1/fraudshield.min.js"></script>
+  <script src="https://cdn.usesentinel.dev/sdk/v1/sentinel.min.js"></script>
 </head>
 <body>
   <button id="submit-btn" onclick="handleSubmit()">Submit</button>
 
   <script>
-    const fs = new FraudShield({ apiKey: 'fs_live_YOUR_KEY' });
+    const sentinel = new Sentinel({ apiKey: 'stl_live_YOUR_KEY' });
     let analysisResult = null;
 
     // Analyze on page load
-    fs.analyze().then(result => {
+    sentinel.analyze().then(result => {
       analysisResult = result;
       console.log('Risk level:', result.risk.level);
     }).catch(err => {
-      console.warn('FraudShield analysis failed:', err);
+      console.warn('Sentinel analysis failed:', err);
       // Fail open — don't block users if analysis fails
     });
 
@@ -240,13 +240,13 @@ export async function POST(req: NextRequest) {
 
 The SDK may fail if the network is unavailable or the API key is invalid.
 Always handle errors gracefully — **fail open** (allow the user through) rather
-than blocking legitimate traffic when FraudShield is unavailable.
+than blocking legitimate traffic when Sentinel is unavailable.
 
 ```javascript
 let visitorId = null;
 
 try {
-  const result = await fs.analyze();
+  const result = await sentinel.analyze();
   visitorId = result.visitorId;
 
   if (result.risk.level === 'critical') {
@@ -259,7 +259,7 @@ try {
   }
 
   // Network/API error — fail open
-  console.warn('FraudShield unavailable:', err.message);
+  console.warn('Sentinel unavailable:', err.message);
   // Continue without fraud check
 }
 ```
@@ -278,11 +278,11 @@ try {
 ## Backend Verification
 
 For sensitive operations (payments, account creation), verify the `visitorId`
-on your backend by querying the FraudShield API directly:
+on your backend by querying the Sentinel API directly:
 
 ```bash
-curl -X GET "https://api.fraudshield.dev/v1/visitors/clx1234567890abcdef" \
-  -H "Authorization: Bearer fs_live_YOUR_KEY"
+curl -X GET "https://api.usesentinel.dev/v1/visitors/clx1234567890abcdef" \
+  -H "Authorization: Bearer stl_live_YOUR_KEY"
 ```
 
 This returns the visitor's full history including past risk scores, helping you
@@ -292,19 +292,19 @@ detect patterns that a single-visit analysis might miss.
 
 ## Privacy & Compliance
 
-FraudShield collects **browser signals** (canvas fingerprint, WebGL, screen dimensions,
+Sentinel collects **browser signals** (canvas fingerprint, WebGL, screen dimensions,
 timezone, navigator properties) but **not** personally identifiable information (PII).
 
 - No cookies are set
 - No cross-site tracking
 - IP addresses are used for geolocation but are not stored long-term
 - Signals are hashed into a fingerprint; raw signals are not retained
-- GDPR-compliant: add FraudShield to your privacy policy under "fraud prevention"
+- GDPR-compliant: add Sentinel to your privacy policy under "fraud prevention"
 
 ---
 
 ## Support
 
-- Documentation: [docs.fraudshield.dev](https://docs.fraudshield.dev)
-- Issues: [github.com/fraudshield/sdk/issues](https://github.com/fraudshield/sdk/issues)
-- Email: support@fraudshield.dev
+- Documentation: [docs.usesentinel.dev](https://docs.usesentinel.dev)
+- Issues: [github.com/sentinel/sdk/issues](https://github.com/sentinel/sdk/issues)
+- Email: support@usesentinel.dev

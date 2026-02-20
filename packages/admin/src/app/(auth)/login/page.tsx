@@ -55,7 +55,7 @@ function AdminLoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@fraudshield.io"
+              placeholder="admin@usesentinel.dev"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
               <Shield className="h-8 w-8 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">FraudShield</h1>
+              <h1 className="text-2xl font-bold">Sentinel</h1>
               <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
           </div>

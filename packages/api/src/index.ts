@@ -5,5 +5,5 @@ serve({
   fetch: app.fetch,
   port: PORT,
 }, (info) => {
-  console.log(`🛡️ FraudShield API running on http://localhost:${info.port}`);
+  console.log(`🛡️ Sentinel API running on http://localhost:${info.port}`);
 });

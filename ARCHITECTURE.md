@@ -1,8 +1,8 @@
-# Architecture — FraudShield
+# Architecture — Sentinel
 
 ## Overview
 
-FraudShield is a closed-core fraud detection SaaS. The SDK collects browser signals, sends them to our API, and we return a fingerprint + risk assessment.
+Sentinel is a closed-core fraud detection SaaS. The SDK collects browser signals, sends them to our API, and we return a fingerprint + risk assessment.
 
 ```
 Browser (SDK) → API → Database

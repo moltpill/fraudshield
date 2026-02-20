@@ -1,5 +1,5 @@
 /**
- * Tier levels for FraudShield accounts
+ * Tier levels for Sentinel accounts
  */
 export enum Tier {
   FREE = 'FREE',
