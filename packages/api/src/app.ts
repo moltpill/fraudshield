@@ -103,11 +103,22 @@ function loadSdkContent(): string | null {
   if (sdkContent) return sdkContent;
   
   // Try multiple possible paths for the SDK
+  // In production (Railway/Nixpacks): cwd=/app/packages/api, dist at ./dist
+  // In development: cwd=project root, dist at packages/api/dist
   const possiblePaths = [
-    join(__dirname, '..', '..', '..', 'sdk', 'dist', 'sdk.min.js'),  // From src/
-    join(__dirname, '..', '..', 'sdk', 'dist', 'sdk.min.js'),        // From dist/
-    join(process.cwd(), 'packages', 'sdk', 'dist', 'sdk.min.js'),   // From project root
+    // From packages/api (cwd in production)
+    join(process.cwd(), '..', 'sdk', 'dist', 'sdk.min.js'),
+    // From dist folder (where app.js runs from)
+    join(__dirname, '..', '..', 'sdk', 'dist', 'sdk.min.js'),
+    // From project root (cwd in development)
+    join(process.cwd(), 'packages', 'sdk', 'dist', 'sdk.min.js'),
+    // From dist folder going to root then sdk
+    join(__dirname, '..', '..', '..', 'sdk', 'dist', 'sdk.min.js'),
   ];
+  
+  console.log('SDK search paths:', possiblePaths);
+  console.log('Current __dirname:', __dirname);
+  console.log('Current cwd:', process.cwd());
   
   for (const path of possiblePaths) {
     try {

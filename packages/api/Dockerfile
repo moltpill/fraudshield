@@ -11,6 +11,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/api/package.json ./packages/api/
+COPY packages/sdk/package.json ./packages/sdk/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -18,9 +19,13 @@ RUN pnpm install --frozen-lockfile
 # Copy source
 COPY packages/shared ./packages/shared
 COPY packages/api ./packages/api
+COPY packages/sdk ./packages/sdk
 
 # Build shared package
 RUN pnpm --filter @fraudshield/shared build
+
+# Build SDK
+RUN pnpm --filter @fraudshield/sdk build
 
 # Generate Prisma client and build API
 RUN pnpm --filter @fraudshield/api db:generate
@@ -37,6 +42,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/api/package.json ./packages/api/
+COPY packages/sdk/package.json ./packages/sdk/
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
@@ -46,6 +52,9 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/api/dist ./packages/api/dist
 COPY --from=builder /app/packages/api/node_modules/.prisma ./packages/api/node_modules/.prisma
 COPY packages/api/prisma ./packages/api/prisma
+
+# Copy SDK dist for serving
+COPY --from=builder /app/packages/sdk/dist ./packages/sdk/dist
 
 # Create data directory for IP lists
 RUN mkdir -p /app/packages/api/data
