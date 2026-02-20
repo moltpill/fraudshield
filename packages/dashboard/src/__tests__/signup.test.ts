@@ -161,7 +161,7 @@ describe('POST /api/onboarding/create-key', () => {
     const mockSession = { user: { accountId: 'acc-123', email: 'u@e.com', tier: 'FREE' } }
     mockApiKeyCreate.mockResolvedValue({
       id: 'key-123',
-      key: 'fs_live_abcd1234567890abcd1234567890ab',
+      key: 'eye_live_abcd1234567890abcd1234567890ab',
       name: 'My First Key',
       status: 'active',
     })
@@ -170,7 +170,7 @@ describe('POST /api/onboarding/create-key', () => {
 
     expect(res.status).toBe(201)
     const data = await res.json()
-    expect(data.key).toContain('fs_live_')
+    expect(data.key).toContain('eye_live_')
     expect(data.name).toBe('My First Key')
 
     expect(mockApiKeyCreate).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('POST /api/onboarding/create-key', () => {
         data: expect.objectContaining({
           accountId: 'acc-123',
           name: 'My First Key',
-          key: expect.stringMatching(/^fs_live_/),
+          key: expect.stringMatching(/^eye_live_/),
         }),
       })
     )
@@ -193,7 +193,7 @@ describe('POST /api/onboarding/create-key', () => {
     const mockSession = { user: { accountId: 'acc-123', email: 'u@e.com', tier: 'FREE' } }
     mockApiKeyCreate.mockResolvedValue({
       id: 'key-123',
-      key: 'fs_live_abcd1234567890abcd1234567890ab',
+      key: 'eye_live_abcd1234567890abcd1234567890ab',
       name: 'Default Key',
       status: 'active',
     })

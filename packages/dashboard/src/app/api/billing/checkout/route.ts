@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const merchantReference = `sentinel-${tier.toLowerCase()}-${account.id}-${Date.now()}`
+  const merchantReference = `eyes-${tier.toLowerCase()}-${account.id}-${Date.now()}`
   const startDate = new Date()
   startDate.setMonth(startDate.getMonth() + 1)
   startDate.setDate(1) // First of next month

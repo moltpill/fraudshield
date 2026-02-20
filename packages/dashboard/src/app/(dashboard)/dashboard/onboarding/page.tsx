@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Key, Code, CheckCircle, ArrowRight, Copy, Check } from 'lucide-react'
+import { Eye, Key, Code, CheckCircle, ArrowRight, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -57,21 +57,29 @@ export default function OnboardingPage() {
     }
   }
 
-  const snippet = `<script src="https://cdn.sentinel.dev/sdk/v1/sentinel.min.js"></script>
+  const snippet = `<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>
 <script>
-  const fs = new Sentinel({ apiKey: '${apiKey ?? 'stl_live_...'}' });
-  const result = await fs.analyze();
+  const eyes = new Eyes({ apiKey: '${apiKey ?? 'eye_live_...'}' });
+  const result = await eyes.analyze();
   console.log(result.risk.level); // 'low' | 'medium' | 'high' | 'critical'
 </script>`
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40">
+      {/* Background effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-1/2 -right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-transparent blur-3xl" />
+        <div className="absolute -bottom-1/2 -left-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-indigo-500/10 via-transparent to-transparent blur-3xl" />
+      </div>
+      
       <div className="w-full max-w-xl px-4 py-8">
         {/* Header */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2 text-primary">
-            <Shield className="h-8 w-8" />
-            <span className="text-2xl font-bold">Sentinel</span>
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Eye className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</span>
           </div>
         </div>
 
@@ -105,7 +113,7 @@ export default function OnboardingPage() {
               </div>
               <CardTitle>Create your first API key</CardTitle>
               <CardDescription>
-                Your API key authenticates requests from your application to Sentinel.
+                Your API key authenticates requests from your application to Eyes.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -149,7 +157,7 @@ export default function OnboardingPage() {
                 <Code className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground">Step 2 of 3</span>
               </div>
-              <CardTitle>Add Sentinel to your site</CardTitle>
+              <CardTitle>Add Eyes to your site</CardTitle>
               <CardDescription>
                 Copy your API key and add the SDK snippet to your page.
               </CardDescription>
@@ -200,7 +208,7 @@ export default function OnboardingPage() {
               </div>
               <CardTitle>You&apos;re all set!</CardTitle>
               <CardDescription>
-                Sentinel will start detecting fraud as soon as visitors load your page.
+                Eyes will start detecting fraud as soon as visitors load your page.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

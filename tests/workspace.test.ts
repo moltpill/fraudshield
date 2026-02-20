@@ -9,7 +9,7 @@ describe('Workspace Structure', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8'));
 
     it('has correct name', () => {
-      expect(pkg.name).toBe('sentinel');
+      expect(pkg.name).toBe('eyes');
     });
 
     it('has correct scripts', () => {
@@ -27,7 +27,7 @@ describe('Workspace Structure', () => {
     const config = JSON.parse(readFileSync(join(ROOT, 'tsconfig.json'), 'utf-8'));
 
     it('has path aliases for packages', () => {
-      expect(config.compilerOptions.paths['@sentinel/*']).toBeDefined();
+      expect(config.compilerOptions.paths['@eyes/*']).toBeDefined();
     });
   });
 
@@ -40,7 +40,7 @@ describe('Workspace Structure', () => {
         expect(existsSync(pkgPath)).toBe(true);
 
         const pkgJson = JSON.parse(readFileSync(pkgPath, 'utf-8'));
-        expect(pkgJson.name).toBe(`@sentinel/${pkg}`);
+        expect(pkgJson.name).toBe(`@eyes/${pkg}`);
       });
     });
   });

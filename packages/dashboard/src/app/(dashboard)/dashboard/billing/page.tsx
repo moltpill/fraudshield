@@ -135,7 +135,7 @@ export default async function BillingPage() {
                   </span>
                 ) : isEnterprise ? (
                   <a
-                    href="mailto:sales@usesentinel.dev"
+                    href="mailto:enterprise@theallseeingeyes.org"
                     className="inline-flex items-center justify-center rounded-md px-3 py-2 text-xs font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground text-center"
                   >
                     Contact Sales

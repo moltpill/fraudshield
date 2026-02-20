@@ -3,15 +3,15 @@ import { randomBytes } from 'crypto'
 export type ApiKeyType = 'live' | 'test'
 
 const API_KEY_PREFIX = {
-  live: 'fs_live_',
-  test: 'fs_test_',
+  live: 'eye_live_',
+  test: 'eye_test_',
 } as const
 
 const HEX_LENGTH = 32
 
 /**
  * Generate a secure API key with the appropriate prefix.
- * Format: fs_live_ or fs_test_ followed by 32 hex characters
+ * Format: eye_live_ or eye_test_ followed by 32 hex characters
  */
 export function generateApiKey(type: ApiKeyType): string {
   const prefix = API_KEY_PREFIX[type]

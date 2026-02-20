@@ -175,9 +175,9 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: 'Open navigation menu' })).toBeInTheDocument()
   })
 
-  it('renders Sentinel brand in mobile header', () => {
+  it('renders Eyes brand in mobile header', () => {
     render(<Header {...defaultProps} />)
-    const links = screen.getAllByText('Sentinel')
+    const links = screen.getAllByText('Eyes')
     expect(links.length).toBeGreaterThanOrEqual(1)
   })
 

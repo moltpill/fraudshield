@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   const name = (body.name as string | undefined)?.trim() || 'Default Key'
   const rawKey = nanoid(30)
-  const key = `fs_live_${rawKey}`
+  const key = `eye_live_${rawKey}`
 
   const apiKey = await prisma.apiKey.create({
     data: {

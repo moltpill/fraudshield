@@ -36,7 +36,7 @@ function formatDate(dateStr: string): string {
 }
 
 function maskKey(key: string): string {
-  const prefix = key.startsWith('fs_live_') ? 'fs_live_' : 'fs_test_'
+  const prefix = key.startsWith('eye_live_') ? 'eye_live_' : 'eye_test_'
   return `${prefix}${'•'.repeat(8)}...${key.slice(-4)}`
 }
 
