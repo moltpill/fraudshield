@@ -9,7 +9,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "start:api": "pnpm --filter @fraudshield/api start",
+    "start:dashboard": "pnpm --filter @fraudshield/dashboard start",
+    "start:admin": "pnpm --filter @fraudshield/admin start",
+    "build:api": "pnpm --filter @fraudshield/api build && pnpm --filter @fraudshield/api exec prisma generate",
+    "build:dashboard": "pnpm --filter @fraudshield/dashboard build",
+    "build:admin": "pnpm --filter @fraudshield/admin build"
   },
   "devDependencies": {
     "vitest": "^3.0.0",
