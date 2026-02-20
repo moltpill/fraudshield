@@ -1,23 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
-import { Eye, ArrowLeft, BookOpen } from 'lucide-react'
+import Script from 'next/script'
+import { Eye, BookOpen } from 'lucide-react'
 
 export default function ApiReferencePage() {
   const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // Dynamically load Scalar
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'
-    script.async = true
-    document.head.appendChild(script)
-
-    return () => {
-      document.head.removeChild(script)
-    }
-  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,6 +68,10 @@ export default function ApiReferencePage() {
               })
             `,
           }}
+        />
+        <Script
+          src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"
+          strategy="afterInteractive"
         />
       </div>
 
