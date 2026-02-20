@@ -652,3 +652,84 @@ Started: Fri Feb 20 2026
 
 ## PHASE 4 COMPLETE ✅
 
+
+---
+## Phase 5: Admin Panel
+Started: Fri Feb 20 2026
+
+
+### STORY-037: Setup admin panel with separate auth ✅
+- Separate Next.js app in packages/admin (port 3003)
+- Added AdminUser model to Prisma schema: id, email, name, password, role (SUPER_ADMIN, SUPPORT, READONLY)
+- Added AuditLog model: id, adminId, action, targetType, targetId, details (JSON), ip, userAgent, createdAt
+- next-auth v5 with Credentials provider validates against AdminUser table
+- Session includes adminId and role (not tier)
+- Middleware protects /admin/* routes, redirects unauthenticated to /login
+- Admin login page with Lock icon and "Restricted area" messaging
+- Separate ThemeProvider with red/crimson primary color scheme
+- 10 auth tests + 5 middleware tests = 15 tests passing
+
+**Learning:** Use vi.hoisted() for ALL variables referenced in vi.mock factories - not just mock fns but also config capture objects. Wrap captured config in a { value } container to allow mutation from factory function.
+
+### STORY-038: Admin layout with navigation ✅
+- Fixed sidebar (256px) with ShieldAlert icon and ADMIN badge
+- SidebarNav: Dashboard, Accounts, API Keys, Billing, Metrics, Audit Log
+- Active state highlights current page (primary color)
+- AdminHeader with breadcrumb navigation and role badge
+- UserNav shows role badge (SUPER_ADMIN=red, SUPPORT=blue, READONLY=gray)
+- Mobile hamburger menu with inline overlay (no Radix Sheet)
+- Different color scheme from customer dashboard: red/crimson primary
+- 10 layout tests passing (sidebar nav, user nav, header, mobile menu)
+
+### STORY-039: Admin dashboard overview ✅
+- Stat cards: Total Accounts, Active API Keys, Requests Today, New Signups (30d)
+- SVG line chart for last 30 days request volume
+- System health panel: API Server, Database, Admin Panel, Dashboard (all stub/healthy)
+- Top 5 accounts by current month usage with tier badge
+- Recent signups list (last 8) with account links
+- All data fetched via direct Prisma queries (no HTTP API needed)
+
+### STORY-040: Admin accounts list page ✅
+- Table: Email, Name, Tier, Status, Joined, Usage (MTD)
+- AccountsFilters client component: search by email/name, filter by tier, filter by status
+- Status badges: active (secondary), suspended (destructive), cancelled (outline)
+- Pagination with URL-based page state
+- Click email to navigate to account detail page
+- Bulk actions via /api/admin/accounts/bulk (suspend/unsuspend)
+
+### STORY-041: Admin account detail page ✅
+- Shows account info: name, email, tier, status, joined date
+- AccountActions component: Suspend/Unsuspend toggle, Change Tier dialog, Impersonate button
+- Usage history chart (last 7 days) and current month total
+- Billing history (stub - Phase 6 placeholder)
+- API keys table: name, masked key, status, created date
+- All actions logged to AuditLog via logAdminAction()
+
+### STORY-042: Admin API key issuance page ✅
+- Lists all API keys across platform with account email and status
+- Filter by status (active/revoked)
+- IssueKeyButton: dialog with account selection + key name, shows key once with copy button
+- RevokeKeyButton: dialog with optional reason field
+- POST /api/admin/keys creates key, PATCH /api/admin/keys/[id] revokes
+- All actions logged to audit log
+- READONLY role blocked from creating/revoking (403)
+
+### STORY-043: Admin audit log viewer ✅
+- Table: Timestamp, Admin (name+role), Action badge, Target (type+id), Details summary
+- Color-coded action badges: green=CREATE, orange=SUSPEND, red=DELETE, yellow=IMPERSONATE
+- Filter by: action type, date range (from/to inputs), search in details
+- Export to CSV via GET /api/admin/audit-log/export (up to 5000 entries)
+- Pagination with 25 entries per page
+
+### STORY-044: Implement audit logging service ✅
+- AuditLog model in Prisma with adminId, action, targetType, targetId, details, ip, userAgent
+- AUDIT_ACTIONS constants: 10 action types (CREATE_ACCOUNT, SUSPEND, UNSUSPEND, DELETE, CHANGE_TIER, CREATE_KEY, REVOKE_KEY, DELETE_KEY, IMPERSONATE, UPDATE_ACCOUNT)
+- logAdminAction() serializes details as JSON string
+- Called from all admin API routes with IP and user-agent capture
+- 5 tests covering all acceptance criteria
+- 30 admin tests total, all passing
+
+**Learning:** Admin panel uses separate Prisma global key (prismaAdmin vs prisma) to avoid hot-reload conflicts. Admin queries AdminUser table (not Account table). Role checks in API routes: READONLY=403 for mutations, SUPER_ADMIN-only for deletes. vi.hoisted() needed for any variable referenced inside vi.mock() factory.
+
+## PHASE 5 COMPLETE ✅
+

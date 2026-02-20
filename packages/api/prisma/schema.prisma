@@ -119,3 +119,40 @@ model TierLimit {
 
   @@map("tier_limits")
 }
+
+/// Admin user for the admin panel (separate from customer accounts)
+/// Role values: SUPER_ADMIN, SUPPORT, READONLY
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // bcrypt hashed password
+  role      String   @default("READONLY") // SUPER_ADMIN, SUPPORT, READONLY
+  createdAt DateTime @default(now())
+
+  // Relations
+  auditLogs AuditLog[]
+
+  @@map("admin_users")
+}
+
+/// Audit log for admin actions
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String   // CREATE_ACCOUNT, SUSPEND_ACCOUNT, UNSUSPEND_ACCOUNT, CHANGE_TIER, REVOKE_KEY, CREATE_KEY, DELETE_ACCOUNT, IMPERSONATE, UPDATE_ACCOUNT
+  targetType  String   // account, api_key, admin
+  targetId    String
+  details     String   @default("{}") // JSON stored as string for SQLite
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
