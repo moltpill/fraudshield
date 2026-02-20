@@ -1,0 +1,708 @@
+openapi: 3.1.0
+info:
+  title: FraudShield API
+  description: |
+    The FraudShield API provides real-time fraud detection and visitor fingerprinting
+    for web applications. Use the SDK to collect browser signals and send them to
+    the API for risk assessment.
+
+    ## Authentication
+
+    All API endpoints (except `/health`) require an API key in the `Authorization` header:
+
+    ```
+    Authorization: Bearer fs_live_<your_api_key>
+    ```
+
+    API keys can be created from the FraudShield Dashboard.
+
+    ## Rate Limiting
+
+    Rate limits are based on your subscription tier:
+
+    | Tier       | Requests/month | Requests/second |
+    |------------|---------------|-----------------|
+    | FREE       | 1,000         | 1               |
+    | STARTER    | 50,000        | 10              |
+    | GROWTH     | 250,000       | 50              |
+    | SCALE      | 1,000,000     | 200             |
+    | ENTERPRISE | Unlimited     | Custom          |
+
+    When a rate limit is exceeded, the API returns `429 Too Many Requests`.
+
+    ## Error Codes
+
+    All errors follow the same JSON structure:
+
+    ```json
+    {
+      "error": "Human-readable message",
+      "code": "MACHINE_READABLE_CODE"
+    }
+    ```
+
+    | Code                   | HTTP Status | Description                                    |
+    |------------------------|-------------|------------------------------------------------|
+    | `UNAUTHORIZED`         | 401         | Missing or invalid API key                     |
+    | `FORBIDDEN`            | 403         | API key is inactive or account suspended       |
+    | `INVALID_SIGNALS`      | 400         | Missing, null, or non-object signals field     |
+    | `RATE_LIMIT_EXCEEDED`  | 429         | Monthly or per-second rate limit exceeded      |
+    | `NOT_FOUND`            | 404         | Resource not found                             |
+    | `INTERNAL_ERROR`       | 500         | Unexpected server error                        |
+
+  version: 1.0.0
+  contact:
+    name: FraudShield Support
+    email: support@fraudshield.dev
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.fraudshield.dev
+    description: Production
+  - url: http://localhost:3001
+    description: Local development
+
+tags:
+  - name: Detection
+    description: Core fraud detection endpoint
+  - name: Visitors
+    description: Visitor analytics and history
+  - name: Usage
+    description: API usage and quota information
+  - name: Health
+    description: API health and status monitoring
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Basic health check
+      description: Returns 200 if the API server is running.
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                timestamp: '2026-02-20T08:00:00.000Z'
+
+  /health/db:
+    get:
+      tags: [Health]
+      summary: Database health check
+      description: Returns 200 if the database connection is healthy.
+      operationId: getHealthDb
+      responses:
+        '200':
+          description: Database is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthDbResponse'
+              example:
+                status: ok
+                db: connected
+                timestamp: '2026-02-20T08:00:00.000Z'
+        '503':
+          description: Database is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthDbResponse'
+
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Kubernetes readiness probe
+      description: |
+        Returns 200 if the API is ready to accept traffic.
+        Checks database connection and IP list availability.
+        Use this for Kubernetes readiness probes.
+      operationId: getHealthReady
+      responses:
+        '200':
+          description: API is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: API is not ready
+
+  /v1/analyze:
+    post:
+      tags: [Detection]
+      summary: Analyze browser signals for fraud
+      description: |
+        The core detection endpoint. Send browser signals collected by the
+        FraudShield SDK, and receive a risk assessment including:
+
+        - **Visitor fingerprint** – unique identifier derived from signals
+        - **Risk score** – 0 to 100, with level (low/medium/high/critical)
+        - **Detection signals** – VPN, Tor, datacenter, bot detection, timezone mismatch
+        - **Geolocation** – country, city, timezone (when available)
+        - **Confidence** – how confident we are in the fingerprint (based on visit history)
+
+        ### Quick Example
+
+        ```javascript
+        const fraudshield = new FraudShield({ apiKey: 'fs_live_...' });
+        const signals = await fraudshield.analyze();
+        const response = await fetch('/v1/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer fs_live_...',
+          },
+          body: JSON.stringify({ signals }),
+        });
+        const result = await response.json();
+        ```
+      operationId: analyzeSignals
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+            example:
+              signals:
+                canvas: a3f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0
+                webgl: 5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c
+                navigator:
+                  userAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+                  language: en-US
+                  plugins: [Adobe PDF, Chrome PDF Viewer]
+                screen:
+                  width: 1920
+                  height: 1080
+                  colorDepth: 24
+                timezone:
+                  timezone: Africa/Johannesburg
+                  offset: -120
+                bot:
+                  webdriver: false
+                  phantom: false
+                  selenium: false
+      responses:
+        '200':
+          description: Risk assessment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+              example:
+                visitorId: clx1234567890abcdef
+                confidence: 0.75
+                firstSeen: '2026-01-15T10:30:00.000Z'
+                lastSeen: '2026-02-20T08:00:00.000Z'
+                risk:
+                  score: 35
+                  level: medium
+                signals:
+                  vpn: false
+                  tor: false
+                  datacenter: false
+                  datacenterProvider: null
+                  bot: false
+                  botScore: 0.05
+                  timezoneMismatch: false
+                location:
+                  country: South Africa
+                  countryCode: ZA
+                  city: Cape Town
+                  timezone: Africa/Johannesburg
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_signals:
+                  summary: Missing signals
+                  value:
+                    error: Missing signals object
+                    code: INVALID_SIGNALS
+                invalid_type:
+                  summary: Invalid signals type
+                  value:
+                    error: Signals must be an object
+                    code: INVALID_SIGNALS
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v1/visitors:
+    get:
+      tags: [Visitors]
+      summary: List visitors
+      description: |
+        Returns a paginated list of unique visitors for your account.
+        Visitors are identified by their browser fingerprint.
+      operationId: listVisitors
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Number of visitors to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of visitors to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated visitor list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitorListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/visitors/{visitorId}:
+    get:
+      tags: [Visitors]
+      summary: Get visitor details
+      description: |
+        Returns detailed information about a specific visitor including
+        their event history.
+      operationId: getVisitor
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: visitorId
+          in: path
+          required: true
+          description: Visitor ID returned from /v1/analyze
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Visitor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitorDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/usage:
+    get:
+      tags: [Usage]
+      summary: Get API usage stats
+      description: |
+        Returns usage statistics for the current billing period.
+      operationId: getUsage
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageResponse'
+              example:
+                used: 4523
+                limit: 50000
+                tier: STARTER
+                resetDate: '2026-03-01T00:00:00.000Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: |
+        Provide your API key in the Authorization header:
+        `Authorization: Bearer fs_live_<your_api_key>`
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Missing Authorization header
+            code: UNAUTHORIZED
+
+    Forbidden:
+      description: API key inactive or account suspended
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: API key is inactive
+            code: FORBIDDEN
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Monthly request limit exceeded
+            code: RATE_LIMIT_EXCEEDED
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Visitor not found
+            code: NOT_FOUND
+
+  schemas:
+    AnalyzeRequest:
+      type: object
+      required: [signals]
+      properties:
+        signals:
+          type: object
+          description: |
+            Browser signals collected by the FraudShield SDK.
+            Must be a non-null, non-array object.
+          additionalProperties: true
+          properties:
+            canvas:
+              type: string
+              description: Canvas fingerprint hash
+            webgl:
+              type: string
+              description: WebGL fingerprint data
+            navigator:
+              type: object
+              properties:
+                userAgent:
+                  type: string
+                language:
+                  type: string
+                plugins:
+                  type: array
+                  items:
+                    type: string
+                webdriver:
+                  type: boolean
+            screen:
+              type: object
+              properties:
+                width:
+                  type: integer
+                height:
+                  type: integer
+                colorDepth:
+                  type: integer
+            timezone:
+              type: object
+              properties:
+                timezone:
+                  type: string
+                  example: Africa/Johannesburg
+                offset:
+                  type: integer
+                  description: UTC offset in minutes (negative = ahead of UTC)
+            bot:
+              type: object
+              properties:
+                webdriver:
+                  type: boolean
+                phantom:
+                  type: boolean
+                selenium:
+                  type: boolean
+                chromeRuntime:
+                  type: boolean
+
+    AnalyzeResponse:
+      type: object
+      required: [visitorId, confidence, firstSeen, lastSeen, risk, signals, location]
+      properties:
+        visitorId:
+          type: string
+          description: Unique identifier for this visitor (stable across sessions)
+          example: clx1234567890abcdef
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: |
+            Confidence in the fingerprint identity (0.0 to 1.0).
+            New visitors start at 0.5; increases logarithmically with visit count.
+          example: 0.75
+        firstSeen:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of visitor's first recorded visit
+        lastSeen:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of visitor's most recent visit
+        risk:
+          type: object
+          required: [score, level]
+          properties:
+            score:
+              type: integer
+              minimum: 0
+              maximum: 100
+              description: Aggregated risk score (0=clean, 100=maximum risk)
+              example: 35
+            level:
+              type: string
+              enum: [low, medium, high, critical]
+              description: |
+                Risk level derived from score:
+                - **low**: score < 30
+                - **medium**: score 30–59
+                - **high**: score 60–79
+                - **critical**: score ≥ 80
+              example: medium
+        signals:
+          type: object
+          required: [vpn, tor, datacenter, datacenterProvider, bot, botScore, timezoneMismatch]
+          properties:
+            vpn:
+              type: boolean
+              description: True if the IP is from a known VPN provider
+            tor:
+              type: boolean
+              description: True if the IP is a Tor exit node
+            datacenter:
+              type: boolean
+              description: True if the IP is from a datacenter/cloud provider
+            datacenterProvider:
+              type: [string, 'null']
+              description: Name of the datacenter provider (e.g. "Amazon AWS", "Google Cloud")
+              example: null
+            bot:
+              type: boolean
+              description: True if bot score >= 0.5
+            botScore:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+              description: Bot probability score (0.0=human, 1.0=confirmed bot)
+              example: 0.05
+            timezoneMismatch:
+              type: boolean
+              description: True if browser timezone doesn't match IP geolocation timezone
+        location:
+          oneOf:
+            - $ref: '#/components/schemas/LocationData'
+            - type: 'null'
+          description: Geolocation data if available, null otherwise
+
+    LocationData:
+      type: object
+      required: [country, countryCode, city, timezone]
+      properties:
+        country:
+          type: string
+          description: Full country name
+          example: South Africa
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: ZA
+        city:
+          type: [string, 'null']
+          description: City name
+          example: Cape Town
+        timezone:
+          type: [string, 'null']
+          description: IANA timezone identifier
+          example: Africa/Johannesburg
+
+    VisitorListResponse:
+      type: object
+      required: [visitors, total, limit, offset]
+      properties:
+        visitors:
+          type: array
+          items:
+            $ref: '#/components/schemas/VisitorSummary'
+        total:
+          type: integer
+          description: Total number of visitors for this account
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    VisitorSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        fingerprint:
+          type: string
+          description: SHA-256 hex hash of signals (64 chars)
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        visitCount:
+          type: integer
+          description: Total number of recorded visits
+
+    VisitorDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/VisitorSummary'
+        - type: object
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/VisitorEvent'
+
+    VisitorEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        isBot:
+          type: boolean
+        isVpn:
+          type: boolean
+        isTor:
+          type: boolean
+        isDatacenter:
+          type: boolean
+        ip:
+          type: [string, 'null']
+          description: Client IP address (if available)
+
+    UsageResponse:
+      type: object
+      required: [used, limit, tier, resetDate]
+      properties:
+        used:
+          type: integer
+          description: Number of API calls used in current billing period
+        limit:
+          type: integer
+          description: Maximum API calls allowed in billing period
+        tier:
+          type: string
+          enum: [FREE, STARTER, GROWTH, SCALE, ENTERPRISE]
+        resetDate:
+          type: string
+          format: date-time
+          description: When the usage counter resets (start of next billing period)
+
+    HealthResponse:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        timestamp:
+          type: string
+          format: date-time
+
+    HealthDbResponse:
+      type: object
+      required: [status, db, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        db:
+          type: string
+          enum: [connected, disconnected]
+        timestamp:
+          type: string
+          format: date-time
+        error:
+          type: string
+          description: Error message when db is disconnected
+
+    ReadinessResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [ok, error]
+            ipLists:
+              type: object
+              properties:
+                vpn:
+                  type: string
+                  enum: [ok, missing]
+                tor:
+                  type: string
+                  enum: [ok, missing]
+                datacenter:
+                  type: string
+                  enum: [ok, missing]
+                geo:
+                  type: string
+                  enum: [ok, missing]
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - INVALID_SIGNALS
+            - RATE_LIMIT_EXCEEDED
+            - NOT_FOUND
+            - INTERNAL_ERROR
