@@ -30,6 +30,8 @@ model Account {
   // Relations
   apiKeys      ApiKey[]
   usageRecords UsageRecord[]
+  subscription Subscription?
+  payments     Payment[]
 
   @@map("accounts")
 }
@@ -134,6 +136,51 @@ model AdminUser {
   auditLogs AuditLog[]
 
   @@map("admin_users")
+}
+
+/// Subscription via Stitch Express recurring billing
+/// Status values: pending, active, past_due, cancelled, expired
+model Subscription {
+  id                   String    @id @default(cuid())
+  accountId            String    @unique
+  stitchSubscriptionId String?   @unique
+  tier                 String    // STARTER, GROWTH, SCALE, ENTERPRISE
+  status               String    @default("pending") // pending, active, past_due, cancelled, expired
+  currentPeriodEnd     DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([accountId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+/// Payment record for billing history
+/// Status values: pending, completed, failed, refunded
+model Payment {
+  id             String   @id @default(cuid())
+  accountId      String
+  subscriptionId String?
+  stitchPaymentId String? @unique
+  amount         Int      // in cents (ZAR)
+  tier           String   // tier being paid for
+  status         String   @default("pending") // pending, completed, failed, refunded
+  eventId        String?  @unique // for idempotent webhook processing
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([accountId])
+  @@index([status])
+  @@map("payments")
 }
 
 /// Audit log for admin actions
