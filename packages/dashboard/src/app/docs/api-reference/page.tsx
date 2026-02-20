@@ -56,9 +56,6 @@ export default function ApiReferencePage() {
             },
             authentication: {
               preferredSecurityScheme: 'bearerAuth',
-              apiKey: {
-                token: 'eye_live_your_api_key_here',
-              },
             },
           }}
         />
