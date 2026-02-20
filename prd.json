@@ -714,14 +714,14 @@
     {
       "id": "STORY-045",
       "phase": "PHASE-6",
-      "title": "Setup Stripe integration",
-      "description": "Configure Stripe with products and prices for each tier.",
+      "title": "Setup Stitch Express integration",
+      "description": "Configure Stitch Express (SA payment provider) with products for each tier. Stitch supports card payments, instant EFT, and bank transfers.",
       "acceptanceCriteria": [
-        "Stripe SDK installed",
-        "Products created: Starter, Growth, Scale, Enterprise",
-        "Monthly prices configured",
-        "Webhook endpoint stub",
-        "Environment variables for keys"
+        "Stitch client SDK installed (@stitchapi/node or REST API)",
+        "Products/payment links configured for: Starter (R149), Growth (R399), Scale (R999), Enterprise (custom)",
+        "Environment variables: STITCH_CLIENT_ID, STITCH_CLIENT_SECRET",
+        "Webhook endpoint stub for payment notifications",
+        "Test mode configured for development"
       ],
       "priority": 1,
       "passes": false
@@ -729,14 +729,15 @@
     {
       "id": "STORY-046",
       "phase": "PHASE-6",
-      "title": "Implement checkout flow",
-      "description": "Create checkout session endpoint and redirect flow.",
+      "title": "Implement Stitch payment flow",
+      "description": "Create payment initiation endpoint using Stitch LinkPay or Payment Initiation API.",
       "acceptanceCriteria": [
-        "POST /api/billing/checkout creates Stripe session",
-        "Redirects to Stripe Checkout",
-        "Success URL updates account tier",
-        "Cancel URL returns to dashboard",
-        "Stores Stripe customer ID on account"
+        "POST /api/billing/checkout initiates Stitch payment request",
+        "Redirects to Stitch-hosted payment page",
+        "Supports card and instant EFT payment methods",
+        "Success redirect updates account tier",
+        "Cancel/failure redirect with error handling",
+        "Stores Stitch payment reference on account"
       ],
       "priority": 2,
       "passes": false
@@ -744,14 +745,15 @@
     {
       "id": "STORY-047",
       "phase": "PHASE-6",
-      "title": "Implement billing portal",
-      "description": "Create endpoint to redirect to Stripe billing portal.",
+      "title": "Implement Stitch Express subscription management",
+      "description": "Use Stitch Express native recurring/subscription API for managing customer subscriptions.",
       "acceptanceCriteria": [
-        "POST /api/billing/portal returns portal URL",
-        "Customer can manage subscription",
-        "Can update payment method",
-        "Can view invoices",
-        "Can cancel subscription"
+        "Create subscription via Stitch Express API on checkout success",
+        "Subscription model in Prisma synced with Stitch: accountId, stitchSubscriptionId, tier, status, currentPeriodEnd",
+        "POST /api/billing/cancel calls Stitch to cancel subscription",
+        "Billing page shows subscription status from Stitch",
+        "Handle subscription lifecycle: active, past_due, cancelled, expired",
+        "Sync subscription status on webhook events"
       ],
       "priority": 3,
       "passes": false
@@ -759,15 +761,15 @@
     {
       "id": "STORY-048",
       "phase": "PHASE-6",
-      "title": "Implement Stripe webhook handler",
-      "description": "Handle Stripe webhooks for subscription events.",
+      "title": "Implement Stitch webhook handler",
+      "description": "Handle Stitch webhooks for payment events.",
       "acceptanceCriteria": [
-        "POST /api/webhooks/stripe endpoint",
-        "Validates webhook signature",
-        "Handles customer.subscription.created",
-        "Handles customer.subscription.updated",
-        "Handles customer.subscription.deleted",
-        "Updates account tier accordingly"
+        "POST /api/webhooks/stitch endpoint",
+        "Validates webhook signature using Stitch signing secret",
+        "Handles payment.completed event — activate/renew subscription",
+        "Handles payment.failed event — mark subscription past due",
+        "Handles payment.refunded event — downgrade to FREE tier",
+        "Idempotency: handle duplicate webhook deliveries"
       ],
       "priority": 4,
       "passes": false
@@ -776,13 +778,15 @@
       "id": "STORY-049",
       "phase": "PHASE-6",
       "title": "Create billing page in dashboard",
-      "description": "Build billing page showing current plan and upgrade options.",
+      "description": "Build billing page showing current plan, subscription status, and upgrade options.",
       "acceptanceCriteria": [
-        "Current plan display with features",
-        "Plan comparison grid",
+        "Current plan display with features list",
+        "Subscription status: active, past due, cancelled, free",
+        "Next billing date (if subscribed)",
+        "Plan comparison grid with ZAR pricing",
         "Upgrade/downgrade buttons",
-        "Billing portal link",
-        "Usage vs limit indicator"
+        "Payment history from internal records",
+        "Usage vs tier limit indicator"
       ],
       "priority": 5,
       "passes": false
@@ -791,13 +795,14 @@
       "id": "STORY-050",
       "phase": "PHASE-6",
       "title": "Create admin billing overview",
-      "description": "Build billing dashboard in admin panel.",
+      "description": "Build billing dashboard in admin panel with revenue metrics.",
       "acceptanceCriteria": [
-        "MRR and ARR calculations",
-        "Revenue by tier breakdown",
-        "Recent payments list",
-        "Failed payments list",
-        "Manual tier override form"
+        "MRR and ARR calculations in ZAR",
+        "Revenue by tier breakdown chart",
+        "Recent payments list with Stitch references",
+        "Failed/pending payments list",
+        "Manual tier override form (for enterprise deals)",
+        "Refund initiation (calls Stitch refund API)"
       ],
       "priority": 6,
       "passes": false

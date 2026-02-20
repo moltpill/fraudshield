@@ -853,3 +853,69 @@ Started: Fri Feb 20 2026
 - Total API tests: 176 passing
 
 ## PHASE 7 COMPLETE ✅
+
+
+---
+## Phase 8: Polish & Launch (STORY-059 to STORY-065)
+
+### STORY-059: Create API documentation ✅
+- OpenAPI 3.1.0 spec at docs/openapi.yaml
+- All endpoints documented: /health, /health/db, /health/ready, /v1/analyze, /v1/visitors, /v1/usage
+- Full request/response schemas with examples and descriptions
+- Authentication (Bearer fs_live_* / fs_test_*), rate limiting, and all error codes documented
+- Tier-based monthly limits: FREE 1K, STARTER 10K, GROWTH 100K, SCALE 1M, ENTERPRISE unlimited
+
+### STORY-060: Create SDK integration guide ✅
+- Comprehensive guide at docs/integration-guide.md
+- Quick start (2 lines), all configuration options, analyze() result structure
+- Risk threshold guide: 0-29 low, 30-59 medium, 60-79 high, 80+ critical
+- Framework examples: React hook with error handling, Next.js server-side verification, vanilla JS
+- Backend verification pattern, privacy & GDPR compliance notes
+
+### STORY-061: Create Docker deployment config ✅
+- docker-compose.yml with all 5 services (API, Dashboard, Admin, PostgreSQL 16, Redis 7)
+- IP updater service runs scheduled cron jobs inside Docker for Tor/VPN/datacenter/GeoLite2
+- Multi-stage Dockerfiles for API (with Prisma migration on startup), Dashboard, Admin (Next.js standalone)
+- All Dockerfiles: Node 20 Alpine base, non-root user, layer-cached pnpm installs
+- .env.example documents all 20+ required environment variables with comments
+
+### STORY-062: Create IP list update cron jobs ✅
+- update-tor.sh: hourly download from torproject.org/torbulkexitlist
+- update-vpn.sh: daily download from X4BNet vpn-ipv4.txt CIDR ranges
+- update-datacenter.sh: weekly download from ipcat datacenters.csv
+- crontab.example: complete crontab with all 4 jobs + log rotation
+- All scripts use atomic file swap (*.tmp → final) to prevent serving partial lists
+- Graceful error handling: keeps existing list on download failure
+
+### STORY-063: Add health check and monitoring endpoints ✅
+- GET /health: basic liveness check → { status: 'ok', timestamp }
+- GET /health/db: database connectivity via SELECT 1, returns 503 on failure
+- GET /health/ready: k8s readiness probe, checks DB + IP list file existence (vpn, tor, datacenter, geo)
+- IP lists missing = degraded but still ready; only DB down causes 503 not_ready
+- 4 tests in health.test.ts, 182 total API tests passing
+
+### STORY-064: Create signup and onboarding flow ✅
+- Signup page at /signup: name, email, password with client-side validation
+- POST /api/auth/signup: validates, bcrypt hashes (12 rounds), creates FREE account
+- 409 EMAIL_TAKEN on duplicate, 400 INVALID_INPUT on missing fields / short password
+- Email normalized to lowercase before storage and lookup
+- 3-step onboarding wizard at /dashboard/onboarding: (1) Create Key (2) Integrate (3) Done
+- POST /api/onboarding/create-key: authenticated, creates fs_live_ prefixed key
+- Step 2 shows actual API key + code snippet (pre-populated with real key), copy button
+- Middleware updated to include / and /signup as public paths
+- 9 tests in signup.test.ts; vi.resetModules() needed before vi.doMock for auth mock isolation
+
+**Learning:** vi.doMock() doesn't re-evaluate cached module imports — must call vi.resetModules() before vi.doMock() when the same module is imported across multiple test cases.
+
+### STORY-065: Create marketing landing page ✅
+- Root / converted from redirect to full marketing landing page (auth check for nav CTA)
+- Hero: value prop, dual CTA (Get started free → /signup, See how it works → #how-it-works)
+- 6 feature cards: canvas fingerprinting, VPN detection, Tor detection, bot detection, risk scoring, timezone mismatch
+- Integration code preview: realistic checkout protection pattern with risk-based branching
+- Pricing table: Free (R0/1K), Starter (R149/10K), Growth (R399/100K, highlighted), Scale (R999/1M)
+- Enterprise contact CTA for >1M requests
+- Logged-in users see "Go to Dashboard" button in nav instead of sign-in/get-started
+
+## PHASE 8 COMPLETE ✅
+
+## 🎉 ALL 65 STORIES COMPLETE — FraudShield MVP READY FOR DEPLOYMENT 🎉
