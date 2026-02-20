@@ -538,3 +538,51 @@ Started: Thu Feb 19 22:35:47 SAST 2026
 - For month bounds: gte startOfMonth, lt startOfNextMonth (avoids timezone issues)
 - Promise.all for parallel tierLimit + usageRecords queries
 
+
+
+### STORY-028: Add IP extraction and geolocation stub ✅
+- extractClientIp() extracts client IP from X-Forwarded-For or X-Real-IP headers
+- Falls back to socket IP if provided
+- Handles IPv4, IPv6, and IPv4-mapped IPv6 addresses
+- Takes first IP from comma-separated X-Forwarded-For list (client IP)
+- GeoLocation interface defined with: country, countryCode, region, city, lat/lng, timezone, isp, asn
+- getGeolocation() stub returns null (real implementation in future story)
+- IP field added to VisitorEvent schema (nullable)
+- Analyze route now extracts and stores client IP
+- 19 new tests covering: header extraction, IPv4/IPv6, fallbacks, integration
+- Total: 275 tests passing
+
+**Learning:** For IP extraction from proxy headers, always take the first IP from X-Forwarded-For (comma-separated list) since proxies append their own IPs. Check X-Forwarded-For before X-Real-IP as it's more widely used.
+
+
+### STORY-028: Add IP extraction and geolocation stub ✅
+- extractClientIp(): X-Forwarded-For → X-Real-IP → socket fallback
+- Handles IPv4 and IPv6
+- GeoLocation interface defined, stub returns null (ready for GeoLite2)
+- IP field added to VisitorEvent schema
+- Analyze route now extracts and stores client IP
+
+## PHASE 3 COMPLETE ✅
+
+
+---
+## Phase 4: Customer Dashboard
+Started: Fri Feb 20 2026
+
+
+### STORY-029: Setup Next.js dashboard with auth ✅
+- Next.js 15 with App Router in packages/dashboard (runs on port 3002)
+- next-auth v5 (Auth.js) configured with Credentials provider
+- Auth validates against Account table using bcryptjs password comparison
+- Added password field to Prisma Account model (nullable String)
+- Login page at /login with shadcn/ui components (Card, Input, Label, Button)
+- Middleware protects all routes except /login and /api/auth/*
+- Authenticated users redirected away from /login to /dashboard
+- Unauthenticated users redirected to /login with callbackUrl preserved
+- Session (JWT strategy) includes: accountId, email, name, tier
+- Dashboard package uses Prisma client referencing api's schema via package.json "prisma.schema"
+- shadcn/ui components: Button, Input, Label, Card created manually
+- 36 tests passing across 3 test files (auth, middleware, login page)
+
+**Learning:** next-auth v5 (Auth.js) exports { handlers, auth, signIn, signOut } from a single auth.ts config file. Route handler at /api/auth/[...nextauth]/route.ts just re-exports handlers. Middleware uses the auth() wrapper function. In pnpm monorepo, point dashboard's Prisma to api's schema via "prisma": { "schema": "../api/prisma/schema.prisma" } in package.json.
+

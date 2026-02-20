@@ -22,6 +22,7 @@ model Account {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String
+  password  String?  // bcrypt hashed password for dashboard login
   tier      String   @default("FREE") // FREE, STARTER, GROWTH, SCALE, ENTERPRISE
   status    String   @default("active") // active, suspended, cancelled
   createdAt DateTime @default(now())
