@@ -733,3 +733,67 @@ Started: Fri Feb 20 2026
 
 ## PHASE 5 COMPLETE ✅
 
+---
+## Phase 6: Billing & Usage
+Started: Fri Feb 20 2026
+
+
+### STORY-045: Setup Stitch Express integration ✅
+- Subscription and Payment models added to Prisma schema
+- Stitch REST client at packages/dashboard/src/lib/stitch.ts
+- getStitchToken() with 14-min caching (Stitch tokens expire at 15min)
+- createPaymentLink(), createStitchSubscription(), cancelStitchSubscription(), refundStitchPayment()
+- verifyWebhookSignature() with HMAC-SHA256 constant-time comparison
+- TIER_PRICES: STARTER=14900, GROWTH=39900, SCALE=99900 (ZAR cents)
+- Subscription model: accountId (unique), stitchSubscriptionId, tier, status, currentPeriodEnd
+- Payment model: accountId, subscriptionId, stitchPaymentId (unique), amount, tier, status, eventId (unique)
+- 15 tests passing
+
+**Learning:** Stitch Express has no official npm package — use REST API directly. Tokens expire in 15min so cache for 14min. Subscription scope is 'client_recurringpaymentconsentrequest'.
+
+### STORY-046: Implement Stitch payment flow ✅
+- POST /api/billing/checkout: validates tier, creates Stitch subscription
+- Returns authorizationUrl for customer to complete authorization (DebiCheck flow)
+- Upserts Subscription record as 'pending' until webhook confirms
+- Creates pending Payment record for tracking
+- 409 guard when already subscribed to same tier with active status
+
+### STORY-047: Stitch subscription management ✅
+- POST /api/billing/cancel: cancels Stitch subscription by ID
+- Updates subscription status to 'cancelled' with cancelledAt timestamp
+- Downgrades account tier to FREE on cancellation
+- 7 tests for cancel flow
+
+**Learning:** Stitch subscriptions use 'client_recurringpaymentconsentrequest' scope for both create and cancel. Once cancelled, subscriptions cannot be re-authorised.
+
+### STORY-048: Stitch webhook handler ✅
+- POST /api/webhooks/stitch with HMAC-SHA256 signature verification
+- Idempotency: checks eventId in Payment table before processing
+- subscription.authorised → activates subscription + upgrades tier
+- payment.completed → marks payment completed, activates subscription
+- payment.failed → marks subscription past_due
+- payment.refunded → downgrades to FREE, cancels subscription
+- 10 tests covering all event types
+
+### STORY-049: Customer billing page ✅
+- Billing nav item in dashboard sidebar
+- Current plan card with status badge and next billing date
+- Plan comparison grid: FREE/Starter/Growth/Scale/Enterprise with ZAR pricing
+- UpgradeButton redirects to Stitch authorizationUrl
+- CancelButton with two-step confirmation
+- Payment history table
+- 12 tests
+
+### STORY-050: Admin billing dashboard ✅
+- MRR/ARR calculations from active subscriptions by tier
+- Revenue by tier breakdown chart
+- Recent payments table with Stitch reference IDs and refund buttons
+- Failed/pending payments list
+- POST /api/admin/billing/refund: READONLY=403, calls Stitch refund API
+- Downgrades account to FREE, cancels subscription, logs audit action
+- 14 tests covering all scenarios
+
+**Learning:** Use Prisma groupBy for efficient tier counts. Admin refund continues with local update if Stitch API call fails.
+
+## PHASE 6 COMPLETE ✅
+
