@@ -22,14 +22,6 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    adminId: string
-    role: string
-  }
-}
-
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -74,14 +66,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.adminId = user.adminId
-        token.role = user.role
+        (token as Record<string, unknown>).adminId = user.adminId;
+        (token as Record<string, unknown>).role = user.role
       }
       return token
     },
     session({ session, token }) {
-      session.user.adminId = token.adminId
-      session.user.role = token.role
+      session.user.adminId = (token as Record<string, unknown>).adminId as string
+      session.user.role = (token as Record<string, unknown>).role as string
       return session
     },
   },

@@ -22,13 +22,6 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    accountId: string
-    tier: string
-  }
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
@@ -82,14 +75,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.accountId = user.accountId
-        token.tier = user.tier
+        (token as Record<string, unknown>).accountId = user.accountId;
+        (token as Record<string, unknown>).tier = user.tier
       }
       return token
     },
     session({ session, token }) {
-      session.user.accountId = token.accountId
-      session.user.tier = token.tier
+      session.user.accountId = (token as Record<string, unknown>).accountId as string
+      session.user.tier = (token as Record<string, unknown>).tier as string
       return session
     },
   },
