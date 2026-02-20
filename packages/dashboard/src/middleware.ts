@@ -13,6 +13,6 @@ function isPublicPath(pathname: string): boolean {
 export default auth
 
 export const config = {
-  // Match all routes except static files and Next.js internals
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)'],
+  // Match all routes except static files, Next.js internals, and public docs
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$|docs).*)'],
 }
