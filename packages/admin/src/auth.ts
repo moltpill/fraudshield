@@ -4,28 +4,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
 // Extend the session type to include adminId and role
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      adminId: string
-      email: string
-      name: string
-      role: string
-    } & DefaultSession['user']
-  }
 
-  interface User {
-    adminId: string
-    role: string
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    adminId: string
-    role: string
-  }
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
