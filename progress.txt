@@ -918,4 +918,17 @@ Started: Fri Feb 20 2026
 
 ## PHASE 8 COMPLETE ✅
 
+## Phase 9: Deployment
+
+### chore: Add Vercel serverless deployment support ✅
+- Created packages/api/api/index.ts: Vercel serverless entry using handle() from hono/vercel (built into main hono package)
+- Created packages/api/vercel.json: rewrites all /* to /api/index, Node.js 20 runtime
+- Created packages/api/tsconfig.json: extends root tsconfig, overrides noEmit:false + outDir, includes src/** and api/**
+- Added @types/node to api devDependencies (needed for fs/path/url/crypto Node built-ins)
+- Added vercel-build script: runs prisma generate (Vercel compiles TS itself)
+- Prisma global singleton in src/lib/prisma.ts already correct for serverless
+- Local dev unchanged: tsx watch src/index.ts still works on port 3001
+- pnpm build now emits to dist/ (dist/api/index.js + dist/src/)
+- Note: @hono/vercel does NOT exist on npm — use import { handle } from 'hono/vercel' (built into hono package)
+
 ## 🎉 ALL 65 STORIES COMPLETE — FraudShield MVP READY FOR DEPLOYMENT 🎉
