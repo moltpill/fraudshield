@@ -1,0 +1,72 @@
+# FraudShield Reverse Proxy — Caddy auto-HTTPS via Let's Encrypt
+# Set DOMAIN in .env (e.g. fraudshield.dev)
+# Subdomains: api.<DOMAIN>  app.<DOMAIN>  admin.<DOMAIN>
+
+{
+    # Global options
+    email admin@{$DOMAIN}
+}
+
+# ── API ───────────────────────────────────────────────────────
+api.{$DOMAIN} {
+    reverse_proxy api:3001 {
+        health_uri    /health
+        health_interval 30s
+        health_timeout  10s
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+# ── Customer Dashboard ────────────────────────────────────────
+app.{$DOMAIN} {
+    reverse_proxy dashboard:3002
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "SAMEORIGIN"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}
+
+# ── Admin Panel ───────────────────────────────────────────────
+admin.{$DOMAIN} {
+    # Restrict admin to known IP ranges in production
+    # Uncomment and fill in your office/VPN CIDR:
+    # @blocked not remote_ip 10.0.0.0/8 YOUR_OFFICE_IP/32
+    # abort @blocked
+
+    reverse_proxy admin:3003
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}

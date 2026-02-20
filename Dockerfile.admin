@@ -1,0 +1,65 @@
+# ────────────────────────────────────────────────────────────
+# Dockerfile.admin — FraudShield Admin Panel (Next.js)
+# ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# ── Stage 1: Build ───────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+# Workspace manifests (layer-cache friendly)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/admin/package.json  ./packages/admin/
+# api package.json required for pnpm workspace resolution
+COPY packages/api/package.json    ./packages/api/
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy source
+COPY packages/shared ./packages/shared
+COPY packages/admin  ./packages/admin
+# Prisma schema lives in api/prisma — admin db:generate needs it
+COPY packages/api/prisma ./packages/api/prisma
+
+# Build
+RUN pnpm --filter @fraudshield/shared build
+RUN pnpm --filter @fraudshield/admin db:generate
+
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @fraudshield/admin build
+
+# ── Stage 2: Runtime ─────────────────────────────────────────
+FROM node:20-alpine AS runtime
+RUN apk add --no-cache wget \
+ && addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nextjs
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# next.config.ts sets outputFileTracingRoot to monorepo root, so
+# standalone places server.js at packages/admin/server.js
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/admin/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/admin/.next/static \
+     ./packages/admin/.next/static
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/admin/public \
+     ./packages/admin/public 2>/dev/null || true
+
+USER nextjs
+EXPOSE 3003
+ENV PORT=3003
+ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:3003/ || exit 1
+
+CMD ["node", "packages/admin/server.js"]

@@ -1,0 +1,65 @@
+# ────────────────────────────────────────────────────────────
+# Dockerfile.dashboard — FraudShield Customer Dashboard (Next.js)
+# ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# ── Stage 1: Build ───────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+# Workspace manifests (layer-cache friendly)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/shared/package.json    ./packages/shared/
+COPY packages/dashboard/package.json ./packages/dashboard/
+# api package.json required for pnpm workspace resolution
+COPY packages/api/package.json       ./packages/api/
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy source
+COPY packages/shared    ./packages/shared
+COPY packages/dashboard ./packages/dashboard
+# Prisma schema lives in api/prisma — dashboard db:generate needs it
+COPY packages/api/prisma ./packages/api/prisma
+
+# Build
+RUN pnpm --filter @fraudshield/shared build
+RUN pnpm --filter @fraudshield/dashboard db:generate
+
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @fraudshield/dashboard build
+
+# ── Stage 2: Runtime ─────────────────────────────────────────
+FROM node:20-alpine AS runtime
+RUN apk add --no-cache wget \
+ && addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nextjs
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# next.config.ts sets outputFileTracingRoot to monorepo root, so
+# standalone places server.js at packages/dashboard/server.js
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/dashboard/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/dashboard/.next/static \
+     ./packages/dashboard/.next/static
+COPY --from=builder --chown=nextjs:nodejs \
+     /app/packages/dashboard/public \
+     ./packages/dashboard/public
+
+USER nextjs
+EXPOSE 3002
+ENV PORT=3002
+ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:3002/ || exit 1
+
+CMD ["node", "packages/dashboard/server.js"]

@@ -1,21 +1,5 @@
-version: '3.9'
-
-# FraudShield Platform - Docker Compose
-# For local development and staging deployments.
-#
-# Usage:
-#   cp .env.example .env  # fill in your values
-#   docker compose up -d
-#
-# Services:
-#   - postgres:   Main database (port 5432)
-#   - redis:      Rate limiting / session cache (port 6379)
-#   - api:        Hono API server (port 3001)
-#   - dashboard:  Customer dashboard - Next.js (port 3002)
-#   - admin:      Admin panel - Next.js (port 3003)
-
 services:
-  # ── Database ────────────────────────────────────────────────────────────────
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -25,106 +9,109 @@ services:
       POSTGRES_DB: fraudshield
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fraudshield"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
-  # ── Redis ────────────────────────────────────────────────────────────────────
+  # ── Redis (rate limiting / session cache) ──────────────────────────────────
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ── API ──────────────────────────────────────────────────────────────────────
+  # ── API (Hono) ─────────────────────────────────────────────────────────────
   api:
     build:
       context: .
-      dockerfile: packages/api/Dockerfile
+      dockerfile: Dockerfile.api
     restart: unless-stopped
+    env_file: .env
     environment:
-      DATABASE_URL: postgresql://fraudshield:${POSTGRES_PASSWORD}@postgres:5432/fraudshield
       NODE_ENV: production
-      PORT: 3001
+      PORT: "3001"
+      DATABASE_URL: postgresql://fraudshield:${POSTGRES_PASSWORD}@postgres:5432/fraudshield
     volumes:
-      # Mount IP intelligence data directory (populated by cron jobs)
-      - ip_data:/app/packages/api/data
-    ports:
-      - "3001:3001"
+      - ip_data:/app/data
+    networks:
+      - internal
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
       interval: 30s
-      timeout: 5s
-      start_period: 15s
+      timeout: 10s
       retries: 3
+      start_period: 15s
 
-  # ── Dashboard ────────────────────────────────────────────────────────────────
+  # ── Customer Dashboard (Next.js) ───────────────────────────────────────────
   dashboard:
     build:
       context: .
-      dockerfile: packages/dashboard/Dockerfile
+      dockerfile: Dockerfile.dashboard
     restart: unless-stopped
+    env_file: .env
     environment:
+      NODE_ENV: production
+      PORT: "3002"
       DATABASE_URL: postgresql://fraudshield:${POSTGRES_PASSWORD}@postgres:5432/fraudshield
-      NEXTAUTH_URL: ${DASHBOARD_URL:-http://localhost:3002}
+      NEXTAUTH_URL: https://app.${DOMAIN:?DOMAIN is required}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}
       STITCH_CLIENT_ID: ${STITCH_CLIENT_ID:-}
       STITCH_CLIENT_SECRET: ${STITCH_CLIENT_SECRET:-}
       STITCH_WEBHOOK_SECRET: ${STITCH_WEBHOOK_SECRET:-}
-      NODE_ENV: production
-    ports:
-      - "3002:3002"
+    networks:
+      - internal
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3002/ || exit 1"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/"]
       interval: 30s
-      timeout: 5s
-      start_period: 20s
+      timeout: 10s
       retries: 3
+      start_period: 20s
 
-  # ── Admin ────────────────────────────────────────────────────────────────────
+  # ── Admin Panel (Next.js) ──────────────────────────────────────────────────
   admin:
     build:
       context: .
-      dockerfile: packages/admin/Dockerfile
+      dockerfile: Dockerfile.admin
     restart: unless-stopped
+    env_file: .env
     environment:
-      DATABASE_URL: postgresql://fraudshield:${POSTGRES_PASSWORD}@postgres:5432/fraudshield
-      NEXTAUTH_URL: ${ADMIN_URL:-http://localhost:3003}
-      NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:?ADMIN_NEXTAUTH_SECRET is required}
       NODE_ENV: production
-    ports:
-      - "3003:3003"
+      PORT: "3003"
+      DATABASE_URL: postgresql://fraudshield:${POSTGRES_PASSWORD}@postgres:5432/fraudshield
+      NEXTAUTH_URL: https://admin.${DOMAIN:?DOMAIN is required}
+      NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:?ADMIN_NEXTAUTH_SECRET is required}
+    networks:
+      - internal
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3003/ || exit 1"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/"]
       interval: 30s
-      timeout: 5s
-      start_period: 20s
+      timeout: 10s
       retries: 3
+      start_period: 20s
 
-  # ── IP List Updater (cron) ────────────────────────────────────────────────────
-  # Runs cron jobs to keep IP intelligence lists fresh.
-  # See packages/api/scripts/ for individual update scripts.
+  # ── IP List Updater (cron) ─────────────────────────────────────────────────
   ip-updater:
     image: node:20-alpine
     restart: unless-stopped
@@ -133,19 +120,45 @@ services:
     volumes:
       - ip_data:/data
       - ./packages/api/scripts:/scripts:ro
-    # Run all update scripts on startup, then schedule via supercronic
     command: >
       sh -c "
-        apk add --no-cache wget curl supercronic &&
-        echo '0 * * * * /scripts/update-tor.sh /data' >> /etc/crontab &&
-        echo '0 4 * * * /scripts/update-vpn.sh /data' >> /etc/crontab &&
-        echo '0 3 * * 0 /scripts/update-datacenter.sh /data' >> /etc/crontab &&
-        echo '0 2 * * 0 /scripts/update-geolite2.sh /data' >> /etc/crontab &&
+        apk add --no-cache wget curl &&
         sh /scripts/update-ip-lists.sh /data &&
-        supercronic /etc/crontab
+        while true; do sleep 86400 && sh /scripts/update-ip-lists.sh /data; done
       "
+    networks:
+      - internal
+
+  # ── Caddy (reverse proxy + automatic HTTPS) ────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    env_file: .env
+    networks:
+      - internal
+    depends_on:
+      api:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
 
 volumes:
   postgres_data:
   redis_data:
   ip_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+    driver: bridge

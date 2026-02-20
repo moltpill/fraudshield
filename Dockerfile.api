@@ -1,0 +1,49 @@
+# ────────────────────────────────────────────────────────────
+# Dockerfile.api — FraudShield API (Hono / Node.js)
+# ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# ── Stage 1: Build ───────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+# Copy workspace manifests first (better layer caching)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/api/package.json    ./packages/api/
+
+# Install ALL workspace deps (needed for build tools)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy source
+COPY packages/shared ./packages/shared
+COPY packages/api    ./packages/api
+
+# Build shared types first, then generate Prisma client, then API
+RUN pnpm --filter @fraudshield/shared build
+RUN pnpm --filter @fraudshield/api   exec prisma generate
+RUN pnpm --filter @fraudshield/api   build
+
+# Prune to production-only deps in an isolated deploy directory
+RUN pnpm deploy --filter @fraudshield/api --prod /deploy
+
+# ── Stage 2: Runtime ─────────────────────────────────────────
+FROM node:20-alpine AS runtime
+RUN apk add --no-cache wget \
+ && addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nodeuser
+
+WORKDIR /app
+COPY --from=builder --chown=nodeuser:nodejs /deploy ./
+
+USER nodeuser
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:3001/health || exit 1
+
+CMD ["node", "dist/index.js"]
