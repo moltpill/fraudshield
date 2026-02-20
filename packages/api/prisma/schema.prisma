@@ -8,7 +8,7 @@ generator client {
 // SQLite for development, PostgreSQL for production
 // Switch via DATABASE_URL env var
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
