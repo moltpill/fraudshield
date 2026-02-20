@@ -1,4 +1,4 @@
-import NextAuth, { type DefaultSession } from 'next-auth'
+import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
@@ -7,11 +7,13 @@ import { prisma } from '@/lib/prisma'
 declare module 'next-auth' {
   interface Session {
     user: {
+      id?: string
       accountId: string
       email: string
       name: string
       tier: string
-    } & DefaultSession['user']
+      image?: string | null
+    }
   }
 
   interface User {
