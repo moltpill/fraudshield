@@ -1,7 +1,18 @@
 import { auth } from '@/auth'
+import { getOverviewStats, getLast7DaysUsage, getRecentVisitors } from '@/lib/dashboard-data'
+import { StatCard } from '@/components/dashboard/stat-card'
+import { RequestsChart } from '@/components/dashboard/requests-chart'
+import { RecentVisitors } from '@/components/dashboard/recent-visitors'
 
 export default async function DashboardPage() {
   const session = await auth()
+  const accountId = session!.user!.accountId
+
+  const [stats, chartData, recentVisitors] = await Promise.all([
+    getOverviewStats(accountId),
+    getLast7DaysUsage(accountId),
+    getRecentVisitors(accountId, 10),
+  ])
 
   return (
     <div>
@@ -12,22 +23,37 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6">
-          <p className="text-sm font-medium text-muted-foreground">Account ID</p>
-          <p className="mt-1 font-mono text-sm truncate">
-            {session?.user?.accountId}
-          </p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <p className="text-sm font-medium text-muted-foreground">Current Tier</p>
-          <p className="mt-1 text-2xl font-bold">{session?.user?.tier}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <p className="text-sm font-medium text-muted-foreground">Status</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">Active</p>
-        </div>
+      {/* Stat cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <StatCard
+          label="Visitors (30d)"
+          value={stats.visitors30d.toLocaleString()}
+          description="Unique visitors in last 30 days"
+        />
+        <StatCard
+          label="Requests Today"
+          value={stats.requestsToday.toLocaleString()}
+          description="API calls made today"
+        />
+        <StatCard
+          label="VPN Traffic"
+          value={`${stats.vpnPercent}%`}
+          description="Requests from VPN IPs"
+        />
+        <StatCard
+          label="Bot Traffic"
+          value={`${stats.botPercent}%`}
+          description="Requests with bot signals"
+        />
       </div>
+
+      {/* Chart */}
+      <div className="mb-8">
+        <RequestsChart data={chartData} />
+      </div>
+
+      {/* Recent visitors */}
+      <RecentVisitors visitors={recentVisitors} />
     </div>
   )
 }
