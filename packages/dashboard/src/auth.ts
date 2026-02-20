@@ -73,6 +73,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    authorized({ request, auth }) {
+      const { pathname } = request.nextUrl
+      // Public paths that don't require authentication
+      const publicPaths = ['/', '/login', '/signup', '/api/auth', '/docs']
+      const isPublic = publicPaths.some(
+        (path) => pathname === path || pathname.startsWith(path + '/')
+      )
+      if (isPublic) return true
+      return !!auth?.user
+    },
     jwt({ token, user }) {
       if (user) {
         (token as Record<string, unknown>).accountId = user.accountId;
