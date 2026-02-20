@@ -1,0 +1,11 @@
+# Root nixpacks.toml for Railway
+# This file is picked up by Nixpacks when building from the monorepo root
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm-9_x"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+# Build commands are overridden per-service via NIXPACKS_BUILD_CMD env var
+# Start commands are overridden per-service via NIXPACKS_START_CMD env var
