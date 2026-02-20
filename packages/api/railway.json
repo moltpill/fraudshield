@@ -5,7 +5,7 @@
     "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @fraudshield/sdk build && cd packages/api && npx prisma generate && pnpm run build"
   },
   "deploy": {
-    "startCommand": "node dist/index.js",
+    "startCommand": "node packages/api/dist/index.js",
     "restartPolicyType": "ON_FAILURE"
   }
 }
