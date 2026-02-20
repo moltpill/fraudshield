@@ -797,3 +797,59 @@ Started: Fri Feb 20 2026
 
 ## PHASE 6 COMPLETE ✅
 
+
+## Phase 7: Detection Engine (STORY-051 to STORY-058)
+
+### STORY-051: GeoLite2 IP geolocation ✅
+- packages/api/src/lib/geo.ts: lazy-loads GeoLite2-City.mmdb via maxmind package
+- Graceful fallback when .mmdb file absent (logs warning, returns null)
+- getGeolocation(ip) returns GeoLocation | null
+- scripts/update-geolite2.sh: downloads .mmdb using MAXMIND_LICENSE_KEY
+- 7 tests (including CIDR utilities in cidr.ts)
+
+### STORY-052: VPN detection ✅
+- packages/api/src/lib/vpn.ts: CIDR-based lookup, in-memory cache
+- isVpnIP(ip): returns true if IP matches any VPN CIDR range
+- loadVpnListFromContent() for testing without file I/O
+- Returns false for IPv6 (unsupported)
+- scripts/update-ip-lists.sh: downloads from X4BNet, torproject, ipcat
+
+### STORY-053: Tor exit node detection ✅
+- packages/api/src/lib/tor.ts: Set-based O(1) lookup
+- isTorExitNode(ip): returns true if IP in Tor exit list
+- loadTorListFromContent() for testing
+
+### STORY-054: Datacenter IP detection ✅
+- packages/api/src/lib/datacenter.ts: binary search through sorted IP ranges
+- Handles ipcat CSV format (startIP,endIP,ProviderName)
+- isDatacenterIP(ip): returns provider name string or null
+- Supports AWS, Google, Cloudflare, etc.
+
+### STORY-055: Timezone mismatch detection ✅
+- packages/api/src/lib/timezone.ts: compares browser timezone vs geo timezone
+- getTimezoneMismatch(browserTz, geoTz): returns 0 (match) or 1 (mismatch)
+- Handles UTC offset comparison and known aliases (US/Eastern = America/New_York)
+- Returns 0 (no mismatch) when either timezone is unknown
+
+### STORY-056: Bot score calculation ✅
+- packages/api/src/lib/bot-score.ts: weighted probability scoring (0-1)
+- Weights: webdriver=0.35, phantom=0.25, selenium=0.20, chromeRuntime=0.10
+- inconsistentPermissions=0.05, missingPlugins=0.03, suspiciousUserAgent=0.02
+- calculateBotScore(signals): returns {score, factors}
+
+### STORY-057: Risk score aggregation ✅
+- packages/api/src/lib/risk-score.ts: combines all signals into 0-100 score
+- Tor=40pts, VPN=25pts, datacenter=10pts, timezoneMismatch=5pts, bot×20pts
+- Thresholds: critical≥80, high≥60, medium≥30, low<30
+- calculateRiskScore(input): returns {score, level, signals}
+
+**Learning:** Tor alone scores 40pts (medium, not high). VPN alone scores 25pts (low, not medium). Only combos like Tor+VPN=65pts reach 'high'.
+
+### STORY-058: Detection results in API response ✅
+- Updated routes/analyze.ts: runs geo/VPN/Tor/datacenter in parallel
+- Calls calculateRiskScore, stores detection flags in VisitorEvent
+- Response includes: risk {score, level}, signals {vpn, tor, datacenter, datacenterProvider, bot, botScore, timezoneMismatch}, location
+- 5 new tests in analyze.test.ts for detection response fields
+- Total API tests: 176 passing
+
+## PHASE 7 COMPLETE ✅

@@ -19,6 +19,13 @@ vi.mock('../lib/prisma.js', () => ({
   },
 }))
 
+// Mock geo to return location data (STORY-058)
+const mockGetGeolocation = vi.hoisted(() => vi.fn())
+vi.mock('../lib/geo.js', () => ({
+  getGeolocation: mockGetGeolocation,
+  _resetGeoReader: vi.fn(),
+}))
+
 describe('POST /v1/analyze', () => {
   let app: Hono
 
@@ -289,5 +296,133 @@ describe('POST /v1/analyze', () => {
     const createCall = mockVisitorEvent.create.mock.calls[0][0]
     const storedSignals = JSON.parse(createCall.data.signals)
     expect(storedSignals).toEqual(testSignals)
+  })
+})
+
+describe('STORY-058: Detection results in API response', () => {
+  let app: Hono
+
+  const mockApiKey = {
+    id: 'key-123',
+    accountId: 'acc-123',
+    key: 'fs_live_abcd1234567890abcd1234567890ab',
+    name: 'Test Key',
+    status: 'active',
+  }
+
+  const mockAccount = {
+    id: 'acc-123',
+    email: 'test@example.com',
+    tier: 'FREE',
+    status: 'active',
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetGeolocation.mockResolvedValue(null)
+
+    app = new Hono()
+    app.use('*', async (c, next) => {
+      c.set('apiKey', mockApiKey as any)
+      c.set('account', mockAccount as any)
+      await next()
+    })
+    app.route('/v1', analyzeRoute)
+
+    const now = new Date()
+    mockVisitor.upsert.mockResolvedValue({
+      id: 'visitor-123',
+      fingerprint: 'hash',
+      firstSeen: now,
+      lastSeen: now,
+      visitCount: 1,
+    })
+    mockVisitorEvent.create.mockResolvedValue({ id: 'event-123' })
+  })
+
+  it('includes risk object with score and level', async () => {
+    const res = await app.request('/v1/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signals: { canvas: 'hash' } }),
+    })
+    const data = await res.json() as Record<string, unknown>
+    expect(data.risk).toBeDefined()
+    expect(typeof (data.risk as Record<string, unknown>).score).toBe('number')
+    expect(['low', 'medium', 'high', 'critical']).toContain((data.risk as Record<string, unknown>).level)
+  })
+
+  it('includes signals object with detection flags', async () => {
+    const res = await app.request('/v1/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signals: { canvas: 'hash' } }),
+    })
+    const data = await res.json() as Record<string, unknown>
+    const signals = data.signals as Record<string, unknown>
+    expect(signals).toBeDefined()
+    expect(typeof signals.vpn).toBe('boolean')
+    expect(typeof signals.tor).toBe('boolean')
+    expect(typeof signals.datacenter).toBe('boolean')
+    expect(typeof signals.bot).toBe('boolean')
+    expect(typeof signals.botScore).toBe('number')
+    expect(typeof signals.timezoneMismatch).toBe('boolean')
+  })
+
+  it('includes location null when geo unavailable', async () => {
+    mockGetGeolocation.mockResolvedValue(null)
+    const res = await app.request('/v1/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ signals: {} }),
+    })
+    const data = await res.json() as Record<string, unknown>
+    expect(data.location).toBeNull()
+  })
+
+  it('includes location data when geo available', async () => {
+    mockGetGeolocation.mockResolvedValue({
+      country: 'South Africa',
+      countryCode: 'ZA',
+      city: 'Cape Town',
+      timezone: 'Africa/Johannesburg',
+      region: null,
+      lat: -33.9,
+      lng: 18.4,
+      isp: null,
+      asn: null,
+    })
+    const res = await app.request('/v1/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Forwarded-For': '1.2.3.4', // Provide IP so geolocation is called
+      },
+      body: JSON.stringify({ signals: {} }),
+    })
+    const data = await res.json() as Record<string, unknown>
+    expect(data.location).toBeDefined()
+    const location = data.location as Record<string, unknown>
+    expect(location.country).toBe('South Africa')
+    expect(location.countryCode).toBe('ZA')
+    expect(location.city).toBe('Cape Town')
+    expect(location.timezone).toBe('Africa/Johannesburg')
+  })
+
+  it('sets isBot=true in visitorEvent when botScore >= 0.5', async () => {
+    const res = await app.request('/v1/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        signals: {
+          bot: { webdriver: true, phantom: true, selenium: true },
+          navigator: { plugins: [], userAgent: 'HeadlessChrome' },
+        },
+      }),
+    })
+    expect(res.status).toBe(200)
+    const createCall = mockVisitorEvent.create.mock.calls[0][0]
+    expect(createCall.data.isBot).toBe(true)
+    expect(createCall.data.riskScore).toBeGreaterThan(0)
   })
 })

@@ -1,7 +1,8 @@
 /**
  * POST /v1/analyze endpoint
- * 
- * Receives browser signals, computes fingerprint, stores visitor data.
+ *
+ * Receives browser signals, computes fingerprint, stores visitor data,
+ * and returns risk assessment with full detection results.
  */
 
 import { Hono } from 'hono'
@@ -9,6 +10,11 @@ import type { Context } from 'hono'
 import { prisma } from '../lib/prisma.js'
 import { computeFingerprint } from '../lib/fingerprint.js'
 import { extractClientIp } from '../lib/ip.js'
+import { getGeolocation } from '../lib/geo.js'
+import { isVpnIP } from '../lib/vpn.js'
+import { isTorExitNode } from '../lib/tor.js'
+import { isDatacenterIP } from '../lib/datacenter.js'
+import { calculateRiskScore } from '../lib/risk-score.js'
 
 export const analyzeRoute = new Hono()
 
@@ -33,7 +39,7 @@ function calculateConfidence(visitCount: number): number {
 analyzeRoute.post('/analyze', async (c: Context) => {
   // Get API key from context (set by auth middleware)
   const apiKey = c.get('apiKey')
-  
+
   // Parse request body
   let body: AnalyzeRequest
   try {
@@ -47,7 +53,7 @@ analyzeRoute.post('/analyze', async (c: Context) => {
 
   // Validate signals
   const { signals } = body
-  
+
   if (!signals) {
     return c.json(
       { error: 'Missing signals object', code: 'INVALID_SIGNALS' },
@@ -62,10 +68,34 @@ analyzeRoute.post('/analyze', async (c: Context) => {
     )
   }
 
+  const signalsObj = signals as Record<string, unknown>
+
   // Compute fingerprint hash
-  const fingerprint = computeFingerprint(signals as Record<string, unknown>)
-  
+  const fingerprint = computeFingerprint(signalsObj)
+
   const now = new Date()
+
+  // Extract client IP
+  const clientIp = extractClientIp(c.req.raw.headers)
+
+  // Run geolocation and IP detection in parallel
+  const [geo, vpn, tor, datacenterProvider] = await Promise.all([
+    clientIp ? getGeolocation(clientIp) : Promise.resolve(null),
+    clientIp ? Promise.resolve(isVpnIP(clientIp)) : Promise.resolve(false),
+    clientIp ? Promise.resolve(isTorExitNode(clientIp)) : Promise.resolve(false),
+    clientIp ? Promise.resolve(isDatacenterIP(clientIp)) : Promise.resolve(null),
+  ])
+
+  // Calculate risk score
+  const riskResult = calculateRiskScore({
+    signals: signalsObj,
+    ip: clientIp,
+    isVpn: vpn,
+    isTor: tor,
+    isDatacenter: datacenterProvider !== null,
+    datacenterProvider,
+    geoTimezone: geo?.timezone ?? null,
+  })
 
   // Create or update visitor record
   const visitor = await prisma.visitor.upsert({
@@ -82,21 +112,18 @@ analyzeRoute.post('/analyze', async (c: Context) => {
     },
   })
 
-  // Extract client IP from request headers
-  const clientIp = extractClientIp(c.req.raw.headers)
-
-  // Create visitor event
+  // Create visitor event with full detection results
   await prisma.visitorEvent.create({
     data: {
       visitorId: visitor.id,
       apiKeyId: apiKey.id,
-      signals: JSON.stringify(signals),
-      riskScore: 0, // TODO: Implement risk scoring in future story
-      isBot: false, // TODO: Implement bot detection in future story
-      isVpn: false, // TODO: Implement VPN detection in future story
-      isTor: false, // TODO: Implement Tor detection in future story
-      isDatacenter: false, // TODO: Implement datacenter detection in future story
-      ip: clientIp, // Client IP address (IPv4 or IPv6)
+      signals: JSON.stringify(signalsObj),
+      riskScore: riskResult.score,
+      isBot: riskResult.signals.botScore >= 0.5,
+      isVpn: riskResult.signals.isVpn,
+      isTor: riskResult.signals.isTor,
+      isDatacenter: riskResult.signals.isDatacenter,
+      ip: clientIp,
     },
   })
 
@@ -108,5 +135,24 @@ analyzeRoute.post('/analyze', async (c: Context) => {
     confidence,
     firstSeen: visitor.firstSeen.toISOString(),
     lastSeen: visitor.lastSeen.toISOString(),
+    risk: {
+      score: riskResult.score,
+      level: riskResult.level,
+    },
+    signals: {
+      vpn: riskResult.signals.isVpn,
+      tor: riskResult.signals.isTor,
+      datacenter: riskResult.signals.isDatacenter,
+      datacenterProvider: riskResult.signals.datacenterProvider,
+      bot: riskResult.signals.botScore >= 0.5,
+      botScore: riskResult.signals.botScore,
+      timezoneMismatch: riskResult.signals.timezoneMismatch > 0,
+    },
+    location: geo ? {
+      country: geo.country,
+      countryCode: geo.countryCode,
+      city: geo.city,
+      timezone: geo.timezone,
+    } : null,
   })
 })
