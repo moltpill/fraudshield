@@ -4,7 +4,6 @@ import {
   Shield,
   Zap,
   Code2,
-  Copy,
   Terminal,
   Server,
   AlertTriangle,
@@ -15,7 +14,18 @@ import {
   Layers,
   Clock,
   Lock,
+  Globe,
+  Cpu,
+  Eye,
 } from 'lucide-react'
+import {
+  CodeBlock,
+  LanguageTabs,
+  InstallTabs,
+  ApiResponse,
+  ErrorTable,
+  Callout,
+} from '@/components/docs'
 
 export const metadata: Metadata = {
   title: 'Integration Guide | FraudShield SDK',
@@ -25,11 +35,16 @@ export const metadata: Metadata = {
 
 const API_URL = 'https://api-production-60cae.up.railway.app'
 
-// Code examples
+// =============================================================================
+// CODE EXAMPLES - All Languages
+// =============================================================================
+
+// --- JavaScript/HTML (CDN) ---
 const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
 <script src="${API_URL}/sdk/fraudshield.min.js"></script>
 
 <script>
+  // Initialize FraudShield
   const fs = new FraudShield({
     apiKey: 'fs_live_your_api_key_here'
   });
@@ -39,22 +54,21 @@ const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
     console.log('Visitor ID:', result.visitorId);
     console.log('Risk Score:', result.riskScore);
     console.log('Risk Level:', result.risk?.level);
+    
+    // Take action based on risk level
+    if (result.risk?.level === 'critical') {
+      showCaptcha();
+    }
+  }).catch(error => {
+    console.error('FraudShield error:', error);
   });
 </script>`
 
-const NPM_INSTALL = `# npm
-npm install @fraudshield/sdk
-
-# yarn
-yarn add @fraudshield/sdk
-
-# pnpm
-pnpm add @fraudshield/sdk`
-
+// --- React/Next.js ---
 const REACT_EXAMPLE = `import { useEffect, useState } from 'react';
 import { FraudShield } from '@fraudshield/sdk';
 
-function App() {
+export function FraudProtection({ children }) {
   const [visitor, setVisitor] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,6 +81,9 @@ function App() {
       .then(result => {
         setVisitor(result);
         setLoading(false);
+        
+        // Store for later use
+        sessionStorage.setItem('fsVisitorId', result.visitorId);
       })
       .catch(error => {
         console.error('FraudShield error:', error);
@@ -74,23 +91,29 @@ function App() {
       });
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return <div className="animate-pulse">Verifying...</div>;
+  }
 
-  return (
-    <div>
-      <p>Visitor ID: {visitor?.visitorId}</p>
-      <p>Risk Score: {visitor?.riskScore}/100</p>
-      <p>Risk Level: {visitor?.risk?.level}</p>
-    </div>
-  );
+  // Block critical risk visitors
+  if (visitor?.risk?.level === 'critical') {
+    return <CaptchaChallenge onSuccess={() => setVisitor(null)} />;
+  }
+
+  return children;
 }`
 
+// --- Vue.js ---
 const VUE_EXAMPLE = `<script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, provide } from 'vue';
 import { FraudShield } from '@fraudshield/sdk';
 
 const visitor = ref(null);
 const loading = ref(true);
+const error = ref(null);
+
+// Provide visitor info to child components
+provide('fraudshield', { visitor, loading });
 
 onMounted(async () => {
   const fs = new FraudShield({
@@ -99,8 +122,12 @@ onMounted(async () => {
 
   try {
     visitor.value = await fs.analyze();
-  } catch (error) {
-    console.error('FraudShield error:', error);
+    
+    // Store for later API calls
+    sessionStorage.setItem('fsVisitorId', visitor.value.visitorId);
+  } catch (err) {
+    error.value = err.message;
+    console.error('FraudShield error:', err);
   } finally {
     loading.value = false;
   }
@@ -108,30 +135,356 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="loading">Loading...</div>
-  <div v-else>
-    <p>Visitor ID: {{ visitor?.visitorId }}</p>
-    <p>Risk Score: {{ visitor?.riskScore }}/100</p>
-    <p>Risk Level: {{ visitor?.risk?.level }}</p>
+  <div v-if="loading" class="loading">Verifying visitor...</div>
+  
+  <div v-else-if="visitor?.risk?.level === 'critical'">
+    <CaptchaChallenge @success="visitor = null" />
   </div>
+  
+  <slot v-else />
 </template>`
 
-const BASIC_USAGE_EXAMPLE = `const fs = new FraudShield({
-  apiKey: 'fs_live_your_api_key_here',
-  // Optional: override the API endpoint
-  // endpoint: 'https://api-production-60cae.up.railway.app'
+// --- Python (Server-side) ---
+const PYTHON_EXAMPLE = `import requests
+import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+FRAUDSHIELD_SECRET_KEY = os.environ.get('FRAUDSHIELD_SECRET_KEY')
+API_URL = '${API_URL}'
+
+def verify_visitor(visitor_id: str, request_id: str) -> dict:
+    """Verify a visitor on the server side."""
+    response = requests.post(
+        f'{API_URL}/v1/verify',
+        headers={
+            'Authorization': f'Bearer {FRAUDSHIELD_SECRET_KEY}',
+            'Content-Type': 'application/json',
+        },
+        json={
+            'visitorId': visitor_id,
+            'requestId': request_id,
+        }
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+@app.route('/api/checkout', methods=['POST'])
+def checkout():
+    data = request.json
+    visitor_id = data.get('visitorId')
+    request_id = data.get('requestId')
+    
+    # Verify the visitor server-side
+    verification = verify_visitor(visitor_id, request_id)
+    risk_level = verification.get('risk', {}).get('level')
+    
+    if risk_level == 'critical':
+        return jsonify({
+            'error': 'Transaction blocked for security reasons'
+        }), 403
+    
+    if risk_level == 'high':
+        return jsonify({
+            'requiresVerification': True,
+            'visitorId': visitor_id
+        }), 428
+    
+    # Process the checkout
+    return jsonify({'success': True})`
+
+// --- Node.js/Express ---
+const NODE_EXAMPLE = `import express from 'express';
+import fetch from 'node-fetch';
+
+const app = express();
+app.use(express.json());
+
+const FRAUDSHIELD_SECRET_KEY = process.env.FRAUDSHIELD_SECRET_KEY;
+const API_URL = '${API_URL}';
+
+// Middleware to verify visitor
+async function verifyVisitor(req, res, next) {
+  const { visitorId, requestId } = req.body;
+  
+  if (!visitorId) {
+    return res.status(400).json({ error: 'visitorId required' });
+  }
+  
+  try {
+    const response = await fetch(\`\${API_URL}/v1/verify\`, {
+      method: 'POST',
+      headers: {
+        'Authorization': \`Bearer \${FRAUDSHIELD_SECRET_KEY}\`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ visitorId, requestId }),
+    });
+    
+    const verification = await response.json();
+    req.fraudshield = verification;
+    next();
+  } catch (error) {
+    console.error('Verification failed:', error);
+    // Fail open - don't block on verification errors
+    next();
+  }
+}
+
+app.post('/api/checkout', verifyVisitor, (req, res) => {
+  const { risk } = req.fraudshield || {};
+  
+  if (risk?.level === 'critical') {
+    return res.status(403).json({
+      error: 'Transaction blocked for security reasons'
+    });
+  }
+  
+  if (risk?.level === 'high') {
+    return res.status(428).json({
+      requiresVerification: true
+    });
+  }
+  
+  // Process checkout...
+  res.json({ success: true });
 });
 
-// Analyze the current visitor
-const result = await fs.analyze();
+app.listen(3000);`
 
-// Access the results
-console.log(result.visitorId);    // Unique visitor fingerprint
-console.log(result.riskScore);    // 0-100 risk score
-console.log(result.risk.level);   // 'low' | 'medium' | 'high' | 'critical'
-console.log(result.risk.signals); // Detection flags`
+// --- PHP ---
+const PHP_EXAMPLE = `<?php
+// FraudShield PHP Integration
 
-const RESPONSE_EXAMPLE = `{
+class FraudShield {
+    private string $secretKey;
+    private string $apiUrl = '${API_URL}';
+    
+    public function __construct(string $secretKey) {
+        $this->secretKey = $secretKey;
+    }
+    
+    public function verify(string $visitorId, ?string $requestId = null): array {
+        $ch = curl_init();
+        
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $this->apiUrl . '/v1/verify',
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $this->secretKey,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POSTFIELDS => json_encode([
+                'visitorId' => $visitorId,
+                'requestId' => $requestId,
+            ]),
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($httpCode !== 200) {
+            throw new Exception('Verification failed: ' . $response);
+        }
+        
+        return json_decode($response, true);
+    }
+}
+
+// Usage in checkout
+$fs = new FraudShield($_ENV['FRAUDSHIELD_SECRET_KEY']);
+
+try {
+    $verification = $fs->verify($_POST['visitorId'], $_POST['requestId']);
+    $riskLevel = $verification['risk']['level'] ?? 'unknown';
+    
+    if ($riskLevel === 'critical') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Transaction blocked']);
+        exit;
+    }
+    
+    // Process checkout...
+    echo json_encode(['success' => true]);
+    
+} catch (Exception $e) {
+    // Log error but don't block the user
+    error_log('FraudShield error: ' . $e->getMessage());
+    echo json_encode(['success' => true]);
+}`
+
+// --- Ruby ---
+const RUBY_EXAMPLE = `require 'net/http'
+require 'json'
+require 'uri'
+
+class FraudShield
+  API_URL = '${API_URL}'
+  
+  def initialize(secret_key)
+    @secret_key = secret_key
+  end
+  
+  def verify(visitor_id:, request_id: nil)
+    uri = URI("#{API_URL}/v1/verify")
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    
+    request = Net::HTTP::Post.new(uri)
+    request['Authorization'] = "Bearer #{@secret_key}"
+    request['Content-Type'] = 'application/json'
+    request.body = {
+      visitorId: visitor_id,
+      requestId: request_id
+    }.to_json
+    
+    response = http.request(request)
+    JSON.parse(response.body)
+  end
+end
+
+# Rails controller example
+class CheckoutController < ApplicationController
+  before_action :verify_visitor, only: [:create]
+  
+  def create
+    if @risk_level == 'critical'
+      render json: { error: 'Transaction blocked' }, status: :forbidden
+      return
+    end
+    
+    # Process checkout...
+    render json: { success: true }
+  end
+  
+  private
+  
+  def verify_visitor
+    fs = FraudShield.new(ENV['FRAUDSHIELD_SECRET_KEY'])
+    verification = fs.verify(
+      visitor_id: params[:visitorId],
+      request_id: params[:requestId]
+    )
+    @risk_level = verification.dig('risk', 'level')
+  rescue => e
+    Rails.logger.error("FraudShield error: #{e.message}")
+    @risk_level = nil # Fail open
+  end
+end`
+
+// --- Go ---
+const GO_EXAMPLE = `package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "net/http"
+    "os"
+)
+
+const apiURL = "${API_URL}"
+
+type VerifyRequest struct {
+    VisitorID string \`json:"visitorId"\`
+    RequestID string \`json:"requestId,omitempty"\`
+}
+
+type RiskInfo struct {
+    Level   string         \`json:"level"\`
+    Signals map[string]bool \`json:"signals"\`
+}
+
+type VerifyResponse struct {
+    VisitorID  string   \`json:"visitorId"\`
+    RiskScore  int      \`json:"riskScore"\`
+    Risk       RiskInfo \`json:"risk"\`
+    Confidence float64  \`json:"confidence"\`
+    RequestID  string   \`json:"requestId"\`
+}
+
+func verifyVisitor(visitorID, requestID string) (*VerifyResponse, error) {
+    secretKey := os.Getenv("FRAUDSHIELD_SECRET_KEY")
+    
+    payload, _ := json.Marshal(VerifyRequest{
+        VisitorID: visitorID,
+        RequestID: requestID,
+    })
+    
+    req, _ := http.NewRequest("POST", apiURL+"/v1/verify", bytes.NewBuffer(payload))
+    req.Header.Set("Authorization", "Bearer "+secretKey)
+    req.Header.Set("Content-Type", "application/json")
+    
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    
+    var result VerifyResponse
+    json.NewDecoder(resp.Body).Decode(&result)
+    return &result, nil
+}
+
+func checkoutHandler(w http.ResponseWriter, r *http.Request) {
+    var body struct {
+        VisitorID string \`json:"visitorId"\`
+        RequestID string \`json:"requestId"\`
+    }
+    json.NewDecoder(r.Body).Decode(&body)
+    
+    verification, err := verifyVisitor(body.VisitorID, body.RequestID)
+    if err != nil {
+        // Fail open on verification errors
+        json.NewEncoder(w).Encode(map[string]bool{"success": true})
+        return
+    }
+    
+    if verification.Risk.Level == "critical" {
+        w.WriteHeader(http.StatusForbidden)
+        json.NewEncoder(w).Encode(map[string]string{
+            "error": "Transaction blocked for security reasons",
+        })
+        return
+    }
+    
+    // Process checkout...
+    json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}`
+
+// --- cURL Examples ---
+const CURL_ANALYZE = `# Analyze a visitor (client-side SDK does this automatically)
+curl -X POST ${API_URL}/v1/analyze \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: fs_live_your_api_key_here" \\
+  -d '{
+    "signals": {
+      "userAgent": "Mozilla/5.0...",
+      "language": "en-US",
+      "platform": "MacIntel",
+      "screenResolution": "1920x1080",
+      "timezone": "America/New_York",
+      "canvas": "abc123...",
+      "webgl": "def456..."
+    }
+  }'`
+
+const CURL_VERIFY = `# Verify a visitor server-side
+curl -X POST ${API_URL}/v1/verify \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer fs_secret_your_secret_key" \\
+  -d '{
+    "visitorId": "fp_a1b2c3d4e5f6g7h8i9j0",
+    "requestId": "req_xyz123abc456"
+  }'`
+
+// --- Response Examples ---
+const SUCCESS_RESPONSE = `{
   "visitorId": "fp_a1b2c3d4e5f6g7h8i9j0",
   "riskScore": 35,
   "risk": {
@@ -151,204 +504,163 @@ const RESPONSE_EXAMPLE = `{
   "requestId": "req_xyz123abc456"
 }`
 
-const ERROR_HANDLING_EXAMPLE = `import { FraudShield, FraudShieldError, ErrorCode } from '@fraudshield/sdk';
-
-const fs = new FraudShield({ apiKey: 'fs_live_xxx' });
-
-try {
-  const result = await fs.analyze();
-  // Handle success
-} catch (error) {
-  if (error instanceof FraudShieldError) {
-    switch (error.code) {
-      case ErrorCode.INVALID_KEY:
-        console.error('Invalid API key');
-        break;
-      case ErrorCode.QUOTA_EXCEEDED:
-        console.error('Monthly quota exceeded');
-        break;
-      case ErrorCode.NETWORK_ERROR:
-        console.error('Network error:', error.message);
-        break;
-      case ErrorCode.SUSPENDED:
-        console.error('Account suspended');
-        break;
-      default:
-        console.error('Unknown error:', error.message);
+const HIGH_RISK_RESPONSE = `{
+  "visitorId": "fp_suspicious123456",
+  "riskScore": 85,
+  "risk": {
+    "level": "critical",
+    "signals": {
+      "isBot": true,
+      "isVPN": true,
+      "isTor": false,
+      "isProxy": false,
+      "isDatacenter": true,
+      "isHeadless": true,
+      "hasInconsistentTimezone": true,
+      "hasCanvasAnomaly": false
     }
-  }
-  
-  // Fail open - don't block the user on errors
-  proceedWithoutFraudCheck();
+  },
+  "confidence": 0.88,
+  "requestId": "req_abc789xyz123"
 }`
 
-const SERVER_VERIFICATION_EXAMPLE = `// Node.js / Express example
-const express = require('express');
-const app = express();
-
-app.post('/api/checkout', async (req, res) => {
-  const { visitorId, requestId } = req.body;
-  
-  // Verify the visitor on your backend
-  const verifyResponse = await fetch(
-    '${API_URL}/v1/verify',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.FRAUDSHIELD_SECRET_KEY,
-      },
-      body: JSON.stringify({ visitorId, requestId }),
-    }
-  );
-  
-  const verification = await verifyResponse.json();
-  
-  if (verification.risk.level === 'critical') {
-    return res.status(403).json({ 
-      error: 'Transaction blocked for security reasons' 
-    });
+// --- Error examples ---
+const ERROR_EXAMPLES = [
+  {
+    status: 401,
+    statusText: 'Unauthorized',
+    code: 'INVALID_KEY',
+    description: 'API key is invalid, expired, or not found',
+    response: `{
+  "error": {
+    "code": "INVALID_KEY",
+    "message": "The API key provided is invalid or has been revoked"
   }
-  
-  if (verification.risk.level === 'high') {
-    // Require additional verification (CAPTCHA, 2FA, etc.)
-    return res.status(428).json({ 
-      requiresVerification: true,
-      visitorId 
-    });
+}`,
+  },
+  {
+    status: 429,
+    statusText: 'Too Many Requests',
+    code: 'RATE_LIMITED',
+    description: 'Too many requests, slow down',
+    response: `{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Rate limit exceeded. Retry after 60 seconds",
+    "retryAfter": 60
   }
-  
-  // Proceed with checkout
-  processCheckout(req.body);
-  res.json({ success: true });
-});`
-
-const WEBHOOK_EXAMPLE = `// Set up webhook endpoint
-app.post('/webhooks/fraudshield', (req, res) => {
-  const signature = req.headers['x-fraudshield-signature'];
-  
-  // Verify webhook signature
-  if (!verifySignature(req.body, signature, process.env.WEBHOOK_SECRET)) {
-    return res.status(401).json({ error: 'Invalid signature' });
+}`,
+  },
+  {
+    status: 402,
+    statusText: 'Payment Required',
+    code: 'QUOTA_EXCEEDED',
+    description: 'Monthly quota has been exceeded',
+    response: `{
+  "error": {
+    "code": "QUOTA_EXCEEDED",
+    "message": "Monthly request quota exceeded. Upgrade your plan.",
+    "usage": { "used": 10000, "limit": 10000 }
   }
-  
-  const { event, data } = req.body;
-  
-  switch (event) {
-    case 'visitor.high_risk':
-      // Alert your security team
-      notifySecurityTeam(data);
-      break;
-    case 'visitor.bot_detected':
-      // Log bot activity
-      logBotAttempt(data);
-      break;
-    case 'quota.warning':
-      // Approaching quota limit
-      notifyBillingTeam(data);
-      break;
+}`,
+  },
+  {
+    status: 403,
+    statusText: 'Forbidden',
+    code: 'SUSPENDED',
+    description: 'Account has been suspended',
+    response: `{
+  "error": {
+    "code": "SUSPENDED",
+    "message": "Account suspended. Contact support@fraudshield.dev"
   }
-  
-  res.json({ received: true });
-});`
+}`,
+  },
+]
 
 // Navigation items for TOC
 const NAV_ITEMS = [
   { id: 'quick-start', label: 'Quick Start', icon: Zap },
   { id: 'installation', label: 'Installation', icon: Terminal },
-  { id: 'basic-usage', label: 'Basic Usage', icon: Code2 },
+  { id: 'client-examples', label: 'Client Integration', icon: Globe },
+  { id: 'server-examples', label: 'Server Integration', icon: Server },
   { id: 'api-reference', label: 'API Reference', icon: BookOpen },
   { id: 'response-format', label: 'Response Format', icon: Layers },
   { id: 'error-handling', label: 'Error Handling', icon: AlertTriangle },
   { id: 'best-practices', label: 'Best Practices', icon: CheckCircle2 },
-  { id: 'server-verification', label: 'Server Verification', icon: Server },
 ]
-
-// Code block component
-function CodeBlock({
-  code,
-  language = 'javascript',
-  filename,
-}: {
-  code: string
-  language?: string
-  filename?: string
-}) {
-  return (
-    <div className="relative group rounded-lg overflow-hidden border bg-gray-950 dark:bg-gray-900">
-      {filename && (
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 bg-gray-900/50">
-          <span className="text-xs text-gray-400 font-mono">{filename}</span>
-          <button
-            className="text-gray-500 hover:text-gray-300 transition-colors"
-            title="Copy code"
-          >
-            <Copy className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-      <pre className="p-4 overflow-x-auto text-sm leading-relaxed">
-        <code className="text-gray-100 font-mono">{code}</code>
-      </pre>
-    </div>
-  )
-}
 
 // Section component
 function Section({
   id,
   title,
+  description,
   children,
 }: {
   id: string
   title: string
+  description?: string
   children: React.ReactNode
 }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-        <span className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-          <ChevronRight className="h-4 w-4 text-primary" />
-        </span>
-        {title}
-      </h2>
+      <div className="flex items-start gap-4 mb-6">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+          <ChevronRight className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
+          {description && (
+            <p className="text-muted-foreground mt-1">{description}</p>
+          )}
+        </div>
+      </div>
       {children}
     </section>
   )
 }
 
-// Info callout
-function Callout({
-  type = 'info',
+// Step component for numbered lists
+function Step({
+  number,
   title,
   children,
 }: {
-  type?: 'info' | 'warning' | 'success'
-  title?: string
+  number: number
+  title: string
   children: React.ReactNode
 }) {
-  const styles = {
-    info: 'border-blue-500/20 bg-blue-500/5 text-blue-600 dark:text-blue-400',
-    warning:
-      'border-yellow-500/20 bg-yellow-500/5 text-yellow-600 dark:text-yellow-400',
-    success:
-      'border-green-500/20 bg-green-500/5 text-green-600 dark:text-green-400',
-  }
-  const icons = {
-    info: BookOpen,
-    warning: AlertTriangle,
-    success: CheckCircle2,
-  }
-  const Icon = icons[type]
-
   return (
-    <div className={`rounded-lg border p-4 my-6 ${styles[type]}`}>
-      <div className="flex gap-3">
-        <Icon className="h-5 w-5 mt-0.5 shrink-0" />
-        <div>
-          {title && <p className="font-semibold mb-1">{title}</p>}
-          <div className="text-sm opacity-90">{children}</div>
-        </div>
+    <div className="flex items-start gap-4 py-4">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-primary/25">
+        {number}
+      </div>
+      <div className="flex-1 pt-0.5">
+        <h3 className="font-semibold mb-2">{title}</h3>
+        <div className="text-sm text-muted-foreground">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+// Feature card
+function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+}) {
+  return (
+    <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <div>
+        <h4 className="font-semibold mb-1">{title}</h4>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
     </div>
   )
@@ -403,16 +715,27 @@ export default function IntegrationGuidePage() {
                     <a
                       key={item.id}
                       href={`#${item.id}`}
-                      className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors group"
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4 group-hover:text-primary transition-colors" />
                       {item.label}
                     </a>
                   )
                 })}
               </nav>
 
-              <div className="mt-8 p-4 rounded-lg border bg-muted/30">
+              <div className="mt-8 p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="flex items-center gap-2 mb-2">
+                  <Cpu className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-medium">SDK Size</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Under <strong>5KB gzipped</strong>. Zero dependencies.
+                  Won't impact page performance.
+                </p>
+              </div>
+
+              <div className="mt-4 p-4 rounded-lg border bg-muted/30">
                 <p className="text-sm font-medium mb-2">Need help?</p>
                 <p className="text-xs text-muted-foreground mb-3">
                   Our team is here to help you integrate FraudShield.
@@ -431,92 +754,98 @@ export default function IntegrationGuidePage() {
           <main className="min-w-0">
             {/* Hero */}
             <div className="mb-12">
-              <div className="inline-flex items-center gap-2 text-sm text-primary font-medium mb-4">
+              <div className="inline-flex items-center gap-2 text-sm text-primary font-medium mb-4 px-3 py-1 rounded-full bg-primary/10">
                 <BookOpen className="h-4 w-4" />
                 Documentation
               </div>
-              <h1 className="text-4xl font-extrabold tracking-tight mb-4">
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                 Integration Guide
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                Learn how to integrate FraudShield SDK into your application. Add
-                browser fingerprinting and fraud detection in under 5 minutes.
+                Learn how to integrate FraudShield SDK into your application.
+                Add browser fingerprinting and fraud detection in{' '}
+                <strong className="text-foreground">under 5 minutes</strong>.
               </p>
+
+              {/* Quick stats */}
+              <div className="grid grid-cols-3 gap-4 mt-8 max-w-lg">
+                <div className="text-center p-3 rounded-lg bg-muted/30 border">
+                  <div className="text-2xl font-bold text-primary">5KB</div>
+                  <div className="text-xs text-muted-foreground">SDK Size</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border">
+                  <div className="text-2xl font-bold text-primary">&lt;50ms</div>
+                  <div className="text-xs text-muted-foreground">Latency</div>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border">
+                  <div className="text-2xl font-bold text-primary">99.9%</div>
+                  <div className="text-xs text-muted-foreground">Uptime</div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-16">
+            <div className="space-y-20">
               {/* Quick Start */}
-              <Section id="quick-start" title="Quick Start">
-                <p className="text-muted-foreground mb-6">
-                  Get up and running in 2 minutes with our CDN-hosted SDK. No
-                  build tools required.
-                </p>
+              <Section
+                id="quick-start"
+                title="Quick Start"
+                description="Get up and running in 2 minutes with our CDN-hosted SDK. No build tools required."
+              >
+                <div className="space-y-2 mb-6">
+                  <Step number={1} title="Get your API key">
+                    <p className="mb-3">
+                      Sign up for a free account and copy your API key from the
+                      dashboard.
+                    </p>
+                    <Link
+                      href="/signup"
+                      className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                    >
+                      Create free account
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </Step>
 
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                      1
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-2">
-                        Get your API key
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Sign up for a free account and copy your API key from
-                        the dashboard.
-                      </p>
-                      <Link
-                        href="/signup"
-                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                      >
-                        Create free account
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0">
-                      2
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-2">
-                        Add the script tag
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Add the SDK to your HTML and call{' '}
-                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                          analyze()
-                        </code>{' '}
-                        to get a risk assessment.
-                      </p>
-                    </div>
-                  </div>
+                  <Step number={2} title="Add the script and analyze visitors">
+                    <p>
+                      Add the SDK to your HTML and call{' '}
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                        analyze()
+                      </code>{' '}
+                      to get a risk assessment.
+                    </p>
+                  </Step>
                 </div>
 
                 <CodeBlock
                   code={SCRIPT_TAG_EXAMPLE}
                   language="html"
                   filename="index.html"
+                  showLineNumbers
                 />
 
                 <Callout type="success" title="That's it!">
                   You're now collecting browser fingerprints and getting risk
-                  scores for every visitor. Check your dashboard to see visitor
-                  analytics.
+                  scores for every visitor. Check your{' '}
+                  <Link href="/dashboard" className="underline">
+                    dashboard
+                  </Link>{' '}
+                  to see visitor analytics in real-time.
                 </Callout>
               </Section>
 
               {/* Installation */}
-              <Section id="installation" title="Installation">
-                <p className="text-muted-foreground mb-6">
-                  Choose your preferred installation method. The SDK works with
-                  any JavaScript framework or plain HTML.
-                </p>
-
-                <div className="space-y-6">
+              <Section
+                id="installation"
+                title="Installation"
+                description="Choose your preferred installation method. The SDK works with any JavaScript framework."
+              >
+                <div className="space-y-8">
                   <div>
-                    <h3 className="font-semibold mb-3">CDN (Recommended for quick start)</h3>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      CDN (Recommended for quick start)
+                    </h3>
                     <CodeBlock
                       code={`<script src="${API_URL}/sdk/fraudshield.min.js"></script>`}
                       language="html"
@@ -524,96 +853,147 @@ export default function IntegrationGuidePage() {
                   </div>
 
                   <div>
-                    <h3 className="font-semibold mb-3">Package Manager</h3>
-                    <CodeBlock
-                      code={NPM_INSTALL}
-                      language="bash"
-                      filename="Terminal"
-                    />
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <Terminal className="h-4 w-4 text-muted-foreground" />
+                      Package Manager
+                    </h3>
+                    <InstallTabs packageName="@fraudshield/sdk" />
                   </div>
                 </div>
 
-                <Callout type="info" title="SDK Size">
-                  The FraudShield SDK is under 5KB gzipped and has zero
-                  dependencies. It won't impact your page performance.
+                <Callout type="info" title="TypeScript Support">
+                  The SDK ships with full TypeScript definitions. No additional
+                  @types packages needed.
                 </Callout>
               </Section>
 
-              {/* Basic Usage */}
-              <Section id="basic-usage" title="Basic Usage">
-                <p className="text-muted-foreground mb-6">
-                  The SDK provides a simple API to analyze visitors and get
-                  risk assessments.
-                </p>
-
-                <CodeBlock
-                  code={BASIC_USAGE_EXAMPLE}
-                  language="javascript"
-                  filename="app.js"
+              {/* Client-side Examples */}
+              <Section
+                id="client-examples"
+                title="Client Integration"
+                description="Integrate FraudShield into your frontend application using your preferred framework."
+              >
+                <LanguageTabs
+                  examples={[
+                    {
+                      language: 'html',
+                      code: SCRIPT_TAG_EXAMPLE,
+                      filename: 'index.html',
+                    },
+                    {
+                      language: 'react',
+                      code: REACT_EXAMPLE,
+                      filename: 'FraudProtection.jsx',
+                    },
+                    {
+                      language: 'vue',
+                      code: VUE_EXAMPLE,
+                      filename: 'App.vue',
+                    },
+                  ]}
                 />
 
-                <h3 className="font-semibold mt-8 mb-4">Framework Examples</h3>
+                <Callout type="tip" title="Pro tip: Cache the visitor ID">
+                  Store the <code className="text-xs bg-muted px-1.5 py-0.5 rounded">visitorId</code>{' '}
+                  in sessionStorage after the first call. You don't need to
+                  re-fingerprint the same visitor multiple times per session.
+                </Callout>
+              </Section>
 
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                      React / Next.js
-                    </h4>
-                    <CodeBlock
-                      code={REACT_EXAMPLE}
-                      language="jsx"
-                      filename="App.jsx"
-                    />
-                  </div>
+              {/* Server-side Examples */}
+              <Section
+                id="server-examples"
+                title="Server Integration"
+                description="Verify visitors server-side using your secret API key. Prevents client-side tampering."
+              >
+                <Callout type="security" title="Use your secret key server-side">
+                  Never expose your <code className="text-xs bg-muted px-1.5 py-0.5 rounded">fs_secret_*</code>{' '}
+                  key in client-side code. It should only be used on your server
+                  for verification.
+                </Callout>
 
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                      Vue.js
-                    </h4>
-                    <CodeBlock
-                      code={VUE_EXAMPLE}
-                      language="vue"
-                      filename="App.vue"
-                    />
-                  </div>
+                <div className="mt-6">
+                  <LanguageTabs
+                    examples={[
+                      {
+                        language: 'node',
+                        code: NODE_EXAMPLE,
+                        filename: 'server.js',
+                      },
+                      {
+                        language: 'python',
+                        code: PYTHON_EXAMPLE,
+                        filename: 'app.py',
+                      },
+                      {
+                        language: 'php',
+                        code: PHP_EXAMPLE,
+                        filename: 'checkout.php',
+                      },
+                      {
+                        language: 'ruby',
+                        code: RUBY_EXAMPLE,
+                        filename: 'checkout_controller.rb',
+                      },
+                      {
+                        language: 'go',
+                        code: GO_EXAMPLE,
+                        filename: 'main.go',
+                      },
+                      {
+                        language: 'curl',
+                        code: CURL_VERIFY,
+                        filename: 'Terminal',
+                      },
+                    ]}
+                    defaultLanguage="node"
+                  />
                 </div>
               </Section>
 
               {/* API Reference */}
-              <Section id="api-reference" title="API Reference">
+              <Section
+                id="api-reference"
+                title="API Reference"
+                description="Complete reference for the FraudShield API endpoints."
+              >
                 <div className="space-y-8">
+                  {/* Constructor */}
                   <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 px-4 py-3 border-b">
+                    <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
                       <code className="text-sm font-semibold">
                         new FraudShield(options)
                       </code>
+                      <span className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded">
+                        Constructor
+                      </span>
                     </div>
                     <div className="p-4">
                       <p className="text-sm text-muted-foreground mb-4">
-                        Creates a new FraudShield instance.
+                        Creates a new FraudShield client instance.
                       </p>
                       <h4 className="text-sm font-semibold mb-2">Options</h4>
                       <div className="border rounded-md divide-y text-sm">
-                        <div className="p-3 flex gap-4">
-                          <code className="text-primary shrink-0">apiKey</code>
+                        <div className="p-3 grid grid-cols-[120px_1fr] gap-4">
+                          <code className="text-primary">apiKey</code>
                           <div>
                             <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded mr-2">
                               required
                             </span>
                             <span className="text-muted-foreground">
-                              Your FraudShield API key (starts with{' '}
-                              <code>fs_live_</code> or <code>fs_test_</code>)
+                              Your API key (starts with <code>fs_live_</code> or{' '}
+                              <code>fs_test_</code>)
                             </span>
                           </div>
                         </div>
-                        <div className="p-3 flex gap-4">
-                          <code className="text-primary shrink-0">endpoint</code>
+                        <div className="p-3 grid grid-cols-[120px_1fr] gap-4">
+                          <code className="text-primary">endpoint</code>
                           <div>
                             <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded mr-2">
                               optional
                             </span>
                             <span className="text-muted-foreground">
-                              Custom API endpoint URL (defaults to production API)
+                              Custom API endpoint (defaults to production)
                             </span>
                           </div>
                         </div>
@@ -621,69 +1001,107 @@ export default function IntegrationGuidePage() {
                     </div>
                   </div>
 
+                  {/* Analyze method */}
                   <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 px-4 py-3 border-b">
+                    <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
                       <code className="text-sm font-semibold">
                         fs.analyze(): Promise&lt;AnalyzeResponse&gt;
                       </code>
+                      <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+                        Method
+                      </span>
                     </div>
                     <div className="p-4">
                       <p className="text-sm text-muted-foreground mb-4">
-                        Analyzes the current browser/device and returns fraud
-                        detection results. Collects all signals (canvas, WebGL,
-                        audio, navigator, screen, timezone, WebRTC IPs, bot
-                        detection) and sends them to the API.
+                        Collects browser signals and returns a fraud risk
+                        assessment.
                       </p>
                       <h4 className="text-sm font-semibold mb-2">
                         Collected Signals
                       </h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                         {[
-                          'Canvas fingerprint',
-                          'WebGL fingerprint',
-                          'Audio fingerprint',
-                          'Navigator info',
-                          'Screen properties',
-                          'Timezone data',
-                          'WebRTC IPs',
-                          'Bot signals',
+                          { icon: '🎨', label: 'Canvas' },
+                          { icon: '🖼️', label: 'WebGL' },
+                          { icon: '🔊', label: 'Audio' },
+                          { icon: '🧭', label: 'Navigator' },
+                          { icon: '📺', label: 'Screen' },
+                          { icon: '🕐', label: 'Timezone' },
+                          { icon: '📡', label: 'WebRTC' },
+                          { icon: '🤖', label: 'Bot signals' },
                         ].map((signal) => (
                           <div
-                            key={signal}
-                            className="flex items-center gap-2 text-muted-foreground"
+                            key={signal.label}
+                            className="flex items-center gap-2 text-muted-foreground p-2 rounded bg-muted/30"
                           >
-                            <CheckCircle2 className="h-3 w-3 text-green-500" />
-                            {signal}
+                            <span>{signal.icon}</span>
+                            {signal.label}
                           </div>
                         ))}
                       </div>
                     </div>
                   </div>
+
+                  {/* cURL examples */}
+                  <div>
+                    <h3 className="font-semibold mb-3">REST API Examples</h3>
+                    <LanguageTabs
+                      examples={[
+                        {
+                          language: 'curl',
+                          code: CURL_ANALYZE,
+                          filename: 'Analyze endpoint',
+                        },
+                        {
+                          language: 'curl',
+                          code: CURL_VERIFY,
+                          filename: 'Verify endpoint',
+                        },
+                      ]}
+                    />
+                  </div>
                 </div>
               </Section>
 
               {/* Response Format */}
-              <Section id="response-format" title="Response Format">
-                <p className="text-muted-foreground mb-6">
-                  The <code className="text-xs bg-muted px-1.5 py-0.5 rounded">analyze()</code>{' '}
-                  method returns a JSON object with the visitor's fingerprint and
-                  risk assessment.
-                </p>
+              <Section
+                id="response-format"
+                title="Response Format"
+                description="Understanding the API response structure and risk signals."
+              >
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Low Risk Response
+                    </h3>
+                    <ApiResponse
+                      title="200 OK - Low Risk"
+                      status={200}
+                      response={SUCCESS_RESPONSE}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      High Risk Response
+                    </h3>
+                    <ApiResponse
+                      title="200 OK - Critical Risk"
+                      status={200}
+                      response={HIGH_RISK_RESPONSE}
+                    />
+                  </div>
+                </div>
 
-                <CodeBlock
-                  code={RESPONSE_EXAMPLE}
-                  language="json"
-                  filename="Response"
-                />
-
-                <h3 className="font-semibold mt-8 mb-4">Response Fields</h3>
+                <h3 className="font-semibold mt-10 mb-4">Response Fields</h3>
 
                 <div className="border rounded-lg divide-y">
                   {[
                     {
                       field: 'visitorId',
                       type: 'string',
-                      desc: 'Unique fingerprint hash for this visitor. Stable across sessions.',
+                      desc: 'Unique fingerprint hash. Stable across sessions.',
                     },
                     {
                       field: 'riskScore',
@@ -698,24 +1116,26 @@ export default function IntegrationGuidePage() {
                     {
                       field: 'risk.signals',
                       type: 'object',
-                      desc: 'Individual detection flags (bot, VPN, Tor, proxy, etc.)',
+                      desc: 'Individual detection flags (bot, VPN, Tor, etc.)',
                     },
                     {
                       field: 'confidence',
                       type: 'number',
-                      desc: 'Fingerprint confidence score from 0 to 1.',
+                      desc: 'Fingerprint confidence from 0 to 1.',
                     },
                     {
                       field: 'requestId',
                       type: 'string',
-                      desc: 'Unique request ID for debugging and server-side verification.',
+                      desc: 'Unique ID for debugging and server verification.',
                     },
                   ].map((item) => (
                     <div
                       key={item.field}
-                      className="p-4 grid grid-cols-[140px_80px_1fr] gap-4 text-sm"
+                      className="p-4 grid grid-cols-1 sm:grid-cols-[140px_80px_1fr] gap-2 sm:gap-4 text-sm"
                     >
-                      <code className="text-primary">{item.field}</code>
+                      <code className="text-primary font-semibold">
+                        {item.field}
+                      </code>
                       <span className="text-muted-foreground font-mono text-xs">
                         {item.type}
                       </span>
@@ -724,76 +1144,52 @@ export default function IntegrationGuidePage() {
                   ))}
                 </div>
 
-                <h3 className="font-semibold mt-8 mb-4">Risk Signals</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  The <code className="text-xs bg-muted px-1.5 py-0.5 rounded">risk.signals</code>{' '}
-                  object contains boolean flags for each detection type:
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <h3 className="font-semibold mt-10 mb-4">Risk Signals</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { signal: 'isBot', desc: 'Automation/bot detected' },
-                    { signal: 'isVPN', desc: 'VPN service detected' },
-                    { signal: 'isTor', desc: 'Tor exit node detected' },
-                    { signal: 'isProxy', desc: 'Proxy server detected' },
-                    { signal: 'isDatacenter', desc: 'Datacenter IP detected' },
-                    { signal: 'isHeadless', desc: 'Headless browser detected' },
-                    { signal: 'hasInconsistentTimezone', desc: 'Timezone/IP mismatch' },
-                    { signal: 'hasCanvasAnomaly', desc: 'Canvas fingerprint anomaly' },
+                    { signal: 'isBot', icon: '🤖', desc: 'Automation detected' },
+                    { signal: 'isVPN', icon: '🔒', desc: 'VPN detected' },
+                    { signal: 'isTor', icon: '🧅', desc: 'Tor exit node' },
+                    { signal: 'isProxy', icon: '🔀', desc: 'Proxy server' },
+                    { signal: 'isDatacenter', icon: '🏢', desc: 'Datacenter IP' },
+                    { signal: 'isHeadless', icon: '👻', desc: 'Headless browser' },
+                    {
+                      signal: 'hasInconsistentTimezone',
+                      icon: '⏰',
+                      desc: 'TZ/IP mismatch',
+                    },
+                    {
+                      signal: 'hasCanvasAnomaly',
+                      icon: '🎨',
+                      desc: 'Canvas anomaly',
+                    },
                   ].map((item) => (
                     <div
                       key={item.signal}
-                      className="flex items-center gap-3 p-3 border rounded-md text-sm"
+                      className="flex items-center gap-3 p-3 border rounded-lg text-sm bg-card hover:bg-muted/30 transition-colors"
                     >
-                      <code className="text-primary text-xs">{item.signal}</code>
-                      <span className="text-muted-foreground">{item.desc}</span>
+                      <span className="text-lg">{item.icon}</span>
+                      <div>
+                        <code className="text-primary text-xs font-semibold">
+                          {item.signal}
+                        </code>
+                        <p className="text-muted-foreground text-xs">
+                          {item.desc}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </Section>
 
               {/* Error Handling */}
-              <Section id="error-handling" title="Error Handling">
-                <p className="text-muted-foreground mb-6">
-                  Handle errors gracefully to ensure your application continues
-                  working even when the SDK encounters issues.
-                </p>
-
-                <CodeBlock
-                  code={ERROR_HANDLING_EXAMPLE}
-                  language="javascript"
-                  filename="error-handling.js"
-                />
-
-                <h3 className="font-semibold mt-8 mb-4">Error Codes</h3>
-
-                <div className="border rounded-lg divide-y">
-                  {[
-                    {
-                      code: 'INVALID_KEY',
-                      desc: 'API key is invalid, expired, or not found.',
-                    },
-                    {
-                      code: 'QUOTA_EXCEEDED',
-                      desc: 'Monthly request quota has been exceeded.',
-                    },
-                    {
-                      code: 'NETWORK_ERROR',
-                      desc: 'Failed to connect to the FraudShield API.',
-                    },
-                    {
-                      code: 'SUSPENDED',
-                      desc: 'Account has been suspended. Contact support.',
-                    },
-                  ].map((item) => (
-                    <div key={item.code} className="p-4 flex gap-4 text-sm">
-                      <code className="text-red-500 shrink-0 font-semibold">
-                        {item.code}
-                      </code>
-                      <span className="text-muted-foreground">{item.desc}</span>
-                    </div>
-                  ))}
-                </div>
+              <Section
+                id="error-handling"
+                title="Error Handling"
+                description="Handle errors gracefully to ensure your app continues working."
+              >
+                <h3 className="font-semibold mb-4">Error Codes</h3>
+                <ErrorTable errors={ERROR_EXAMPLES} />
 
                 <Callout type="warning" title="Fail-Open Design">
                   Always implement a fail-open strategy. If FraudShield
@@ -804,121 +1200,59 @@ export default function IntegrationGuidePage() {
               </Section>
 
               {/* Best Practices */}
-              <Section id="best-practices" title="Best Practices">
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">
-                        When to call analyze()
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Call <code className="text-xs bg-muted px-1.5 py-0.5 rounded">analyze()</code>{' '}
-                        on page load for general visitor tracking, or just
-                        before critical actions (checkout, signup, login) for
-                        targeted protection. Avoid calling it on every page
-                        navigation to conserve your quota.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Layers className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Cache the visitorId</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Store the <code className="text-xs bg-muted px-1.5 py-0.5 rounded">visitorId</code>{' '}
-                        in memory or session storage after the first call. You
-                        don't need to re-fingerprint the same visitor multiple
-                        times per session.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Lock className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">
-                        Protect your API key
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Your publishable API key (fs_live_*) is safe to expose
-                        in client-side code — it can only analyze visitors. Keep
-                        your secret key (fs_secret_*) on the server for
-                        verification and admin operations.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Zap className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1">Rate Limits</h3>
-                      <p className="text-sm text-muted-foreground">
-                        The API allows up to 100 requests per minute per API
-                        key. For high-traffic applications, implement
-                        client-side caching and consider upgrading to a higher
-                        plan.
-                      </p>
-                    </div>
-                  </div>
+              <Section
+                id="best-practices"
+                title="Best Practices"
+                description="Tips for getting the most out of FraudShield."
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FeatureCard
+                    icon={Clock}
+                    title="When to call analyze()"
+                    description="Call on page load for tracking, or just before critical actions (checkout, signup) for targeted protection."
+                  />
+                  <FeatureCard
+                    icon={Layers}
+                    title="Cache the visitorId"
+                    description="Store the visitorId in sessionStorage. Don't re-fingerprint the same visitor multiple times."
+                  />
+                  <FeatureCard
+                    icon={Lock}
+                    title="Protect your keys"
+                    description="Publishable key (fs_live_*) is safe client-side. Keep secret key (fs_secret_*) on server only."
+                  />
+                  <FeatureCard
+                    icon={Zap}
+                    title="Rate Limits"
+                    description="100 requests/minute per key. Implement caching and upgrade your plan for high traffic."
+                  />
+                  <FeatureCard
+                    icon={Eye}
+                    title="Monitor your dashboard"
+                    description="Watch for unusual patterns - sudden spikes in high-risk visitors may indicate an attack."
+                  />
+                  <FeatureCard
+                    icon={Server}
+                    title="Verify server-side"
+                    description="For critical operations (payments, signups), always verify the visitor on your backend."
+                  />
                 </div>
               </Section>
 
-              {/* Server-Side Verification */}
-              <Section id="server-verification" title="Server-Side Verification">
-                <p className="text-muted-foreground mb-6">
-                  For critical operations, verify the visitor's risk score on
-                  your server using the secret API key. This prevents
-                  client-side tampering.
-                </p>
-
-                <CodeBlock
-                  code={SERVER_VERIFICATION_EXAMPLE}
-                  language="javascript"
-                  filename="server.js"
-                />
-
-                <h3 className="font-semibold mt-8 mb-4">Webhook Events</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Set up webhooks to receive real-time notifications about
-                  high-risk visitors and other events.
-                </p>
-
-                <CodeBlock
-                  code={WEBHOOK_EXAMPLE}
-                  language="javascript"
-                  filename="webhooks.js"
-                />
-
-                <Callout type="info" title="Webhook Events">
-                  Available events: <code>visitor.high_risk</code>,{' '}
-                  <code>visitor.bot_detected</code>,{' '}
-                  <code>visitor.new</code>, <code>quota.warning</code>,{' '}
-                  <code>quota.exceeded</code>
-                </Callout>
-              </Section>
-
               {/* CTA */}
-              <div className="border-t pt-12 mt-16">
+              <div className="border-t pt-12 mt-8">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
+                  <h2 className="text-2xl font-bold mb-4">
+                    Ready to get started?
+                  </h2>
                   <p className="text-muted-foreground mb-6">
                     Create a free account and start protecting your application
                     in minutes.
                   </p>
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex items-center justify-center gap-4 flex-wrap">
                     <Link
                       href="/signup"
-                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
                     >
                       Get your API key
                       <ArrowRight className="h-4 w-4" />
