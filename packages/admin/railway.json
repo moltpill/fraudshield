@@ -11,7 +11,7 @@
           "cmds": ["cd ../.. && pnpm install --frozen-lockfile"]
         },
         "build": {
-          "cmds": ["cd ../.. && pnpm --filter @fraudshield/shared build && cd packages/admin && npx prisma generate --schema=../api/prisma/schema.prisma && NEXT_TELEMETRY_DISABLED=1 pnpm run build"]
+          "cmds": ["cd ../.. && pnpm --filter @fraudshield/shared build && cd packages/admin && npx prisma generate --schema=../api/prisma/schema.prisma && NEXT_TELEMETRY_DISABLED=1 pnpm run build && cp -r .next/static .next/standalone/.next/static"]
         }
       },
       "start": {
