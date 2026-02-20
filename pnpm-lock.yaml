@@ -23,6 +23,9 @@ importers:
 
   packages/admin:
     dependencies:
+      '@eyes/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -47,9 +50,6 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.2.4(@types/react@19.2.14)(react@19.2.4)
-      '@sentinel/shared':
-        specifier: workspace:*
-        version: link:../shared
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -129,15 +129,15 @@ importers:
 
   packages/api:
     dependencies:
+      '@eyes/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@hono/node-server':
         specifier: ^1.19.9
         version: 1.19.9(hono@4.12.0)
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
-      '@sentinel/shared':
-        specifier: workspace:*
-        version: link:../shared
       hono:
         specifier: ^4.12.0
         version: 4.12.0
@@ -163,6 +163,9 @@ importers:
 
   packages/dashboard:
     dependencies:
+      '@eyes/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@prisma/client':
         specifier: ^5.22.0
         version: 5.22.0(prisma@5.22.0)
@@ -190,9 +193,6 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@sentinel/shared':
-        specifier: workspace:*
-        version: link:../shared
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -278,7 +278,7 @@ importers:
 
   packages/sdk:
     dependencies:
-      '@sentinel/shared':
+      '@eyes/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:

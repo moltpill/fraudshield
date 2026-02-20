@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server'
 const openApiSpec = {
   openapi: '3.1.0',
   info: {
-    title: 'Sentinel API',
+    title: 'The All Seeing Eyes API',
     version: '1.0.0',
-    description: `AI-Powered Fraud Detection API
+    description: `# 👁️ The All Seeing Eyes
+## See Everything. Trust No One.
 
-Sentinel identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
+Eyes identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
 and IP intelligence. This API allows you to analyze visitors and retrieve visitor data.
 
 ## Authentication
@@ -15,23 +16,28 @@ All API requests require authentication via Bearer token. Include your API key i
 Authorization header:
 
 \`\`\`
-Authorization: Bearer stl_live_your_api_key_here
+Authorization: Bearer eye_live_your_api_key_here
 \`\`\`
+
+API keys can be created in the [Eyes Dashboard](https://theallseeingeyes.org/dashboard).
 
 ## Rate Limits
 Rate limits are based on your subscription tier:
-- Free: 1,000 requests/month
-- Starter: 10,000 requests/month
-- Growth: 100,000 requests/month
-- Scale: 1,000,000 requests/month`,
+- **Free:** 1,000 requests/month
+- **Starter:** 10,000 requests/month
+- **Growth:** 100,000 requests/month
+- **Scale:** 1,000,000 requests/month
+
+## Error Handling
+The API uses standard HTTP status codes. Errors include a JSON body with \`error\` and \`code\` fields.`,
     contact: {
-      name: 'Sentinel Support',
-      email: 'support@usesentinel.dev',
-      url: 'https://usesentinel.dev'
+      name: 'Eyes Support',
+      email: 'support@theallseeingeyes.org',
+      url: 'https://theallseeingeyes.org'
     }
   },
   servers: [
-    { url: 'https://api-production-60cae.up.railway.app', description: 'Production' },
+    { url: 'https://api.theallseeingeyes.org', description: 'Production' },
     { url: 'http://localhost:3001', description: 'Local development' }
   ],
   tags: [
@@ -39,12 +45,26 @@ Rate limits are based on your subscription tier:
     { name: 'Visitors', description: 'Retrieve visitor information and history' },
     { name: 'Usage', description: 'Monitor API usage and quotas' }
   ],
+  security: [{ bearerAuth: [] }],
   paths: {
     '/v1/analyze': {
       post: {
         operationId: 'analyzeVisitor',
         summary: 'Analyze a visitor',
-        description: 'Analyze browser signals and return a fraud risk assessment.',
+        description: `Analyze browser signals and return a fraud risk assessment.
+
+This endpoint receives browser fingerprint signals collected by the Eyes SDK
+and returns a visitor ID along with risk scoring and detection flags.
+
+**Signals analyzed:**
+- Canvas fingerprint
+- WebGL renderer info
+- Audio context fingerprint
+- Navigator properties
+- Screen characteristics
+- Timezone data
+- WebRTC IP leaks
+- Bot/automation detection`,
         tags: ['Analysis'],
         security: [{ bearerAuth: [] }],
         requestBody: {
@@ -59,10 +79,14 @@ Rate limits are based on your subscription tier:
                 navigator: {
                   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...',
                   language: 'en-US',
-                  platform: 'MacIntel'
+                  platform: 'MacIntel',
+                  hardwareConcurrency: 8,
+                  deviceMemory: 8
                 },
-                screen: { width: 1920, height: 1080 },
-                timezone: { offset: -120, name: 'Africa/Johannesburg' }
+                screen: { width: 1920, height: 1080, colorDepth: 24, pixelRatio: 2 },
+                timezone: { offset: -120, name: 'Africa/Johannesburg' },
+                webrtcIPs: ['192.168.1.100'],
+                bot: { webdriver: false, phantom: false, selenium: false }
               }
             }
           }
@@ -81,17 +105,28 @@ Rate limits are based on your subscription tier:
                     signals: {
                       isBot: false,
                       isVPN: false,
-                      isTor: false
+                      isTor: false,
+                      isProxy: false,
+                      isDatacenter: false,
+                      isHeadless: false,
+                      hasInconsistentTimezone: false
                     }
                   },
                   confidence: 0.95,
-                  requestId: 'req_xyz123abc456'
+                  requestId: 'req_xyz123abc456',
+                  location: {
+                    country: 'South Africa',
+                    countryCode: 'ZA',
+                    city: 'Cape Town',
+                    timezone: 'Africa/Johannesburg'
+                  }
                 }
               }
             }
           },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '402': { $ref: '#/components/responses/QuotaExceeded' },
+          '403': { $ref: '#/components/responses/Forbidden' },
           '429': { $ref: '#/components/responses/RateLimited' }
         }
       }
@@ -100,14 +135,15 @@ Rate limits are based on your subscription tier:
       get: {
         operationId: 'getVisitor',
         summary: 'Get visitor details',
-        description: 'Retrieve detailed information about a specific visitor.',
+        description: 'Retrieve detailed information about a specific visitor including their visit history and risk score trends.',
         tags: ['Visitors'],
         security: [{ bearerAuth: [] }],
         parameters: [{
           name: 'visitorId',
           in: 'path',
           required: true,
-          schema: { type: 'string' }
+          description: 'The unique visitor identifier',
+          schema: { type: 'string', example: 'fp_a1b2c3d4e5f6g7h8i9j0' }
         }],
         responses: {
           '200': {
@@ -123,13 +159,59 @@ Rate limits are based on your subscription tier:
         }
       }
     },
+    '/v1/visitors': {
+      get: {
+        operationId: 'listVisitors',
+        summary: 'List visitors',
+        description: 'Retrieve a paginated list of visitors for your account. Results are sorted by most recent activity.',
+        tags: ['Visitors'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'limit',
+            in: 'query',
+            description: 'Maximum number of results to return',
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 }
+          },
+          {
+            name: 'cursor',
+            in: 'query',
+            description: 'Pagination cursor from previous response',
+            schema: { type: 'string' }
+          },
+          {
+            name: 'riskLevel',
+            in: 'query',
+            description: 'Filter by risk level',
+            schema: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'List of visitors',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/VisitorList' }
+              }
+            }
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' }
+        }
+      }
+    },
     '/v1/usage': {
       get: {
         operationId: 'getUsage',
         summary: 'Get usage statistics',
-        description: 'Retrieve your current usage statistics.',
+        description: 'Retrieve your current usage statistics including request counts and quota information.',
         tags: ['Usage'],
         security: [{ bearerAuth: [] }],
+        parameters: [{
+          name: 'period',
+          in: 'query',
+          description: 'Time period for usage stats',
+          schema: { type: 'string', enum: ['day', 'week', 'month'], default: 'month' }
+        }],
         responses: {
           '200': {
             description: 'Usage statistics',
@@ -138,7 +220,8 @@ Rate limits are based on your subscription tier:
                 schema: { $ref: '#/components/schemas/Usage' }
               }
             }
-          }
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' }
         }
       }
     },
@@ -148,6 +231,7 @@ Rate limits are based on your subscription tier:
         summary: 'Health check',
         description: 'Check if the API is running',
         tags: ['Analysis'],
+        security: [],
         responses: {
           '200': {
             description: 'API is healthy',
@@ -173,34 +257,65 @@ Rate limits are based on your subscription tier:
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'API Key',
-        description: 'API key authentication. Include your API key in the Authorization header.'
+        description: 'API key authentication. Include your API key in the Authorization header: `Authorization: Bearer eye_live_your_api_key`\n\nGet your API key from the [Eyes Dashboard](https://theallseeingeyes.org/dashboard).'
       }
     },
     schemas: {
       AnalyzeRequest: {
         type: 'object',
-        description: 'Browser signals collected by the SDK',
+        description: 'Browser signals collected by the Eyes SDK',
         properties: {
-          canvas: { type: 'string' },
-          webgl: { type: 'string' },
-          audio: { type: 'number' },
-          navigator: { type: 'object' },
-          screen: { type: 'object' },
-          timezone: { type: 'object' },
+          canvas: { type: 'string', description: 'Canvas fingerprint hash' },
+          webgl: { type: 'string', description: 'WebGL renderer and vendor information' },
+          audio: { type: 'number', description: 'Audio context fingerprint value' },
+          navigator: {
+            type: 'object',
+            properties: {
+              userAgent: { type: 'string' },
+              language: { type: 'string' },
+              platform: { type: 'string' },
+              hardwareConcurrency: { type: 'integer' },
+              deviceMemory: { type: 'number' }
+            }
+          },
+          screen: {
+            type: 'object',
+            properties: {
+              width: { type: 'integer' },
+              height: { type: 'integer' },
+              colorDepth: { type: 'integer' },
+              pixelRatio: { type: 'number' }
+            }
+          },
+          timezone: {
+            type: 'object',
+            properties: {
+              offset: { type: 'integer' },
+              name: { type: 'string' }
+            }
+          },
           webrtcIPs: { type: 'array', items: { type: 'string' } },
-          bot: { type: 'object' }
+          bot: {
+            type: 'object',
+            properties: {
+              webdriver: { type: 'boolean' },
+              phantom: { type: 'boolean' },
+              selenium: { type: 'boolean' }
+            }
+          }
         }
       },
       AnalyzeResponse: {
         type: 'object',
         required: ['visitorId', 'riskScore', 'risk', 'confidence', 'requestId'],
         properties: {
-          visitorId: { type: 'string', description: 'Unique visitor identifier' },
-          riskScore: { type: 'integer', minimum: 0, maximum: 100 },
+          visitorId: { type: 'string', description: 'Unique visitor identifier (fingerprint hash)' },
+          riskScore: { type: 'integer', minimum: 0, maximum: 100, description: 'Risk score from 0 (safe) to 100 (high risk)' },
           risk: {
             type: 'object',
+            required: ['level', 'signals'],
             properties: {
-              level: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] },
+              level: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'Risk level category' },
               signals: {
                 type: 'object',
                 properties: {
@@ -209,20 +324,22 @@ Rate limits are based on your subscription tier:
                   isTor: { type: 'boolean' },
                   isProxy: { type: 'boolean' },
                   isDatacenter: { type: 'boolean' },
-                  isHeadless: { type: 'boolean' }
+                  isHeadless: { type: 'boolean' },
+                  hasInconsistentTimezone: { type: 'boolean' }
                 }
               }
             }
           },
-          confidence: { type: 'number', minimum: 0, maximum: 1 },
-          requestId: { type: 'string' },
+          confidence: { type: 'number', minimum: 0, maximum: 1, description: 'Fingerprint confidence score (0-1)' },
+          requestId: { type: 'string', description: 'Unique request ID for debugging' },
           location: {
             type: 'object',
             nullable: true,
             properties: {
               country: { type: 'string' },
               countryCode: { type: 'string' },
-              city: { type: 'string', nullable: true }
+              city: { type: 'string', nullable: true },
+              timezone: { type: 'string', nullable: true }
             }
           }
         }
@@ -236,12 +353,33 @@ Rate limits are based on your subscription tier:
           lastSeen: { type: 'string', format: 'date-time' },
           visitCount: { type: 'integer' },
           lastRiskScore: { type: 'integer' },
-          lastRiskLevel: { type: 'string' }
+          lastRiskLevel: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] },
+          recentEvents: { type: 'array', items: { $ref: '#/components/schemas/VisitorEvent' } }
+        }
+      },
+      VisitorEvent: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          timestamp: { type: 'string', format: 'date-time' },
+          riskScore: { type: 'integer' },
+          riskLevel: { type: 'string' },
+          signals: { type: 'object' },
+          location: { type: 'object' }
+        }
+      },
+      VisitorList: {
+        type: 'object',
+        properties: {
+          visitors: { type: 'array', items: { $ref: '#/components/schemas/Visitor' } },
+          nextCursor: { type: 'string', nullable: true },
+          total: { type: 'integer' }
         }
       },
       Usage: {
         type: 'object',
         properties: {
+          period: { type: 'string' },
           used: { type: 'integer' },
           limit: { type: 'integer' },
           percentUsed: { type: 'number' },
@@ -253,8 +391,8 @@ Rate limits are based on your subscription tier:
         type: 'object',
         required: ['error', 'code'],
         properties: {
-          error: { type: 'string' },
-          code: { type: 'string' }
+          error: { type: 'string', description: 'Human-readable error message' },
+          code: { type: 'string', description: 'Machine-readable error code' }
         }
       }
     },
@@ -264,7 +402,16 @@ Rate limits are based on your subscription tier:
         content: {
           'application/json': {
             schema: { $ref: '#/components/schemas/Error' },
-            example: { error: 'The API key provided is invalid', code: 'INVALID_KEY' }
+            example: { error: 'The API key provided is invalid or has been revoked', code: 'INVALID_KEY' }
+          }
+        }
+      },
+      Forbidden: {
+        description: 'Account suspended or access denied',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+            example: { error: 'Account suspended. Contact support@theallseeingeyes.org', code: 'SUSPENDED' }
           }
         }
       },
@@ -282,7 +429,7 @@ Rate limits are based on your subscription tier:
         content: {
           'application/json': {
             schema: { $ref: '#/components/schemas/Error' },
-            example: { error: 'Monthly request quota exceeded', code: 'QUOTA_EXCEEDED' }
+            example: { error: 'Monthly request quota exceeded. Upgrade your plan.', code: 'QUOTA_EXCEEDED', usage: { used: 10000, limit: 10000 } }
           }
         }
       },
@@ -291,7 +438,7 @@ Rate limits are based on your subscription tier:
         content: {
           'application/json': {
             schema: { $ref: '#/components/schemas/Error' },
-            example: { error: 'Rate limit exceeded', code: 'RATE_LIMITED', retryAfter: 60 }
+            example: { error: 'Rate limit exceeded. Retry after 60 seconds', code: 'RATE_LIMITED', retryAfter: 60 }
           }
         }
       }

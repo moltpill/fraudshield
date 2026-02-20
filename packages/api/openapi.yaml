@@ -1,11 +1,12 @@
 openapi: 3.1.0
 info:
-  title: Sentinel API
+  title: The All Seeing Eyes API
   version: 1.0.0
   description: |
-    AI-Powered Fraud Detection API
+    # 👁️ The All Seeing Eyes
+    ## See Everything. Trust No One.
     
-    Sentinel identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
+    Eyes identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
     and IP intelligence. This API allows you to analyze visitors and retrieve visitor data.
     
     ## Authentication
@@ -13,39 +14,61 @@ info:
     `Authorization` header:
     
     ```
-    Authorization: Bearer stl_live_your_api_key_here
+    Authorization: Bearer eye_live_your_api_key_here
     ```
+    
+    API keys can be created in the [Eyes Dashboard](https://theallseeingeyes.org/dashboard).
     
     ## Rate Limits
     Rate limits are based on your subscription tier:
-    - Free: 1,000 requests/month
-    - Starter: 10,000 requests/month
-    - Growth: 100,000 requests/month
-    - Scale: 1,000,000 requests/month
+    - **Free:** 1,000 requests/month
+    - **Starter:** 10,000 requests/month
+    - **Growth:** 100,000 requests/month
+    - **Scale:** 1,000,000 requests/month
     
     ## Error Handling
     The API uses standard HTTP status codes. Errors include a JSON body with `error` and `code` fields.
+    
+    | Code | Description |
+    |------|-------------|
+    | `INVALID_KEY` | API key is invalid or revoked |
+    | `QUOTA_EXCEEDED` | Monthly quota has been exceeded |
+    | `RATE_LIMITED` | Too many requests, slow down |
+    | `SUSPENDED` | Account has been suspended |
   contact:
-    name: Sentinel Support
-    email: support@usesentinel.dev
-    url: https://usesentinel.dev
+    name: Eyes Support
+    email: support@theallseeingeyes.org
+    url: https://theallseeingeyes.org
   license:
     name: Proprietary
-    url: https://usesentinel.dev/terms
+    url: https://theallseeingeyes.org/terms
+  x-logo:
+    url: https://theallseeingeyes.org/logo.png
+    altText: Eyes Logo
 
 servers:
-  - url: https://api.usesentinel.dev
+  - url: https://api.theallseeingeyes.org
     description: Production
   - url: http://localhost:3001
     description: Local development
 
 tags:
   - name: Analysis
-    description: Analyze visitor fingerprints and get risk scores
+    description: |
+      Analyze visitor fingerprints and get risk scores.
+      
+      The analyze endpoint is the core of Eyes — send browser signals collected by the SDK
+      and receive a comprehensive fraud risk assessment.
   - name: Visitors
-    description: Retrieve visitor information and history
+    description: |
+      Retrieve visitor information and history.
+      
+      Track returning visitors and monitor their risk score trends over time.
   - name: Usage
-    description: Monitor API usage and quotas
+    description: |
+      Monitor API usage and quotas.
+      
+      Keep track of your request counts and plan limits.
 
 security:
   - bearerAuth: []
@@ -58,8 +81,18 @@ paths:
       description: |
         Analyze browser signals and return a fraud risk assessment.
         
-        This endpoint receives browser fingerprint signals collected by the SDK
+        This endpoint receives browser fingerprint signals collected by the Eyes SDK
         and returns a visitor ID along with risk scoring and detection flags.
+        
+        **Signals analyzed:**
+        - Canvas fingerprint
+        - WebGL renderer info
+        - Audio context fingerprint
+        - Navigator properties
+        - Screen characteristics
+        - Timezone data
+        - WebRTC IP leaks
+        - Bot/automation detection
       tags:
         - Analysis
       requestBody:
@@ -253,12 +286,14 @@ components:
       bearerFormat: API Key
       description: |
         API key authentication. Include your API key in the Authorization header:
-        `Authorization: Bearer stl_live_your_api_key`
+        `Authorization: Bearer eye_live_your_api_key`
+        
+        Get your API key from the [Eyes Dashboard](https://theallseeingeyes.org/dashboard).
 
   schemas:
     AnalyzeRequest:
       type: object
-      description: Browser signals collected by the SDK
+      description: Browser signals collected by the Eyes SDK
       properties:
         canvas:
           type: string
@@ -484,7 +519,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
           example:
-            error: "Account suspended. Contact support@usesentinel.dev"
+            error: "Account suspended. Contact support@theallseeingeyes.org"
             code: "SUSPENDED"
 
     NotFound:

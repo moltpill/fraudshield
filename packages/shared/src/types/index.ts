@@ -1,5 +1,5 @@
 /**
- * Tier levels for Sentinel accounts
+ * Tier levels for Eyes accounts
  */
 export enum Tier {
   FREE = 'FREE',

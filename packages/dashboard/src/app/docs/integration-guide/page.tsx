@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Metadata } from 'next'
 import {
-  Shield,
+  Eye,
   Zap,
   Code2,
   Terminal,
@@ -16,7 +16,8 @@ import {
   Lock,
   Globe,
   Cpu,
-  Eye,
+  ScanEye,
+  Fingerprint,
 } from 'lucide-react'
 import {
   CodeBlock,
@@ -28,12 +29,12 @@ import {
 } from '@/components/docs'
 
 export const metadata: Metadata = {
-  title: 'Integration Guide | Sentinel SDK',
+  title: 'Integration Guide | Eyes SDK',
   description:
-    'Complete integration guide for Sentinel SDK. Learn how to detect fraud, bots, and suspicious visitors in your web application.',
+    'Complete integration guide for Eyes SDK. Learn how to detect fraud, bots, and suspicious visitors in your web application.',
 }
 
-const API_URL = 'https://api-production-60cae.up.railway.app'
+const API_URL = 'https://api.theallseeingeyes.org'
 
 // =============================================================================
 // CODE EXAMPLES - All Languages
@@ -41,16 +42,16 @@ const API_URL = 'https://api-production-60cae.up.railway.app'
 
 // --- JavaScript/HTML (CDN) ---
 const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
-<script src="${API_URL}/sdk/sentinel.min.js"></script>
+<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>
 
 <script>
-  // Initialize Sentinel
-  const sentinel = new Sentinel({
-    apiKey: 'stl_live_your_api_key_here'
+  // Initialize Eyes
+  const eyes = new Eyes({
+    apiKey: 'eye_live_your_api_key_here'
   });
 
   // Analyze visitor on page load
-  sentinel.analyze().then(result => {
+  eyes.analyze().then(result => {
     console.log('Visitor ID:', result.visitorId);
     console.log('Risk Score:', result.riskScore);
     console.log('Risk Level:', result.risk?.level);
@@ -60,33 +61,33 @@ const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
       showCaptcha();
     }
   }).catch(error => {
-    console.error('Sentinel error:', error);
+    console.error('Eyes error:', error);
   });
 </script>`
 
 // --- React/Next.js ---
 const REACT_EXAMPLE = `import { useEffect, useState } from 'react';
-import { Sentinel } from '@sentinel/sdk';
+import { Eyes } from '@eyes/sdk';
 
 export function FraudProtection({ children }) {
   const [visitor, setVisitor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const sentinel = new Sentinel({
-      apiKey: process.env.NEXT_PUBLIC_SENTINEL_API_KEY,
+    const eyes = new Eyes({
+      apiKey: process.env.NEXT_PUBLIC_EYES_API_KEY,
     });
 
-    sentinel.analyze()
+    eyes.analyze()
       .then(result => {
         setVisitor(result);
         setLoading(false);
         
         // Store for later use
-        sessionStorage.setItem('stlVisitorId', result.visitorId);
+        sessionStorage.setItem('eyeVisitorId', result.visitorId);
       })
       .catch(error => {
-        console.error('Sentinel error:', error);
+        console.error('Eyes error:', error);
         setLoading(false);
       });
   }, []);
@@ -106,28 +107,28 @@ export function FraudProtection({ children }) {
 // --- Vue.js ---
 const VUE_EXAMPLE = `<script setup>
 import { ref, onMounted, provide } from 'vue';
-import { Sentinel } from '@sentinel/sdk';
+import { Eyes } from '@eyes/sdk';
 
 const visitor = ref(null);
 const loading = ref(true);
 const error = ref(null);
 
 // Provide visitor info to child components
-provide('sentinel', { visitor, loading });
+provide('eyes', { visitor, loading });
 
 onMounted(async () => {
-  const sentinel = new Sentinel({
-    apiKey: import.meta.env.VITE_SENTINEL_API_KEY,
+  const eyes = new Eyes({
+    apiKey: import.meta.env.VITE_EYES_API_KEY,
   });
 
   try {
-    visitor.value = await sentinel.analyze();
+    visitor.value = await eyes.analyze();
     
     // Store for later API calls
-    sessionStorage.setItem('stlVisitorId', visitor.value.visitorId);
+    sessionStorage.setItem('eyeVisitorId', visitor.value.visitorId);
   } catch (err) {
     error.value = err.message;
-    console.error('Sentinel error:', err);
+    console.error('Eyes error:', err);
   } finally {
     loading.value = false;
   }
@@ -151,7 +152,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-SENTINEL_SECRET_KEY = os.environ.get('SENTINEL_SECRET_KEY')
+EYES_SECRET_KEY = os.environ.get('EYES_SECRET_KEY')
 API_URL = '${API_URL}'
 
 def verify_visitor(visitor_id: str, request_id: str) -> dict:
@@ -159,7 +160,7 @@ def verify_visitor(visitor_id: str, request_id: str) -> dict:
     response = requests.post(
         f'{API_URL}/v1/verify',
         headers={
-            'Authorization': f'Bearer {SENTINEL_SECRET_KEY}',
+            'Authorization': f'Bearer {EYES_SECRET_KEY}',
             'Content-Type': 'application/json',
         },
         json={
@@ -202,7 +203,7 @@ import fetch from 'node-fetch';
 const app = express();
 app.use(express.json());
 
-const SENTINEL_SECRET_KEY = process.env.SENTINEL_SECRET_KEY;
+const EYES_SECRET_KEY = process.env.EYES_SECRET_KEY;
 const API_URL = '${API_URL}';
 
 // Middleware to verify visitor
@@ -217,14 +218,14 @@ async function verifyVisitor(req, res, next) {
     const response = await fetch(\`\${API_URL}/v1/verify\`, {
       method: 'POST',
       headers: {
-        'Authorization': \`Bearer \${SENTINEL_SECRET_KEY}\`,
+        'Authorization': \`Bearer \${EYES_SECRET_KEY}\`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ visitorId, requestId }),
     });
     
     const verification = await response.json();
-    req.sentinel = verification;
+    req.eyes = verification;
     next();
   } catch (error) {
     console.error('Verification failed:', error);
@@ -234,7 +235,7 @@ async function verifyVisitor(req, res, next) {
 }
 
 app.post('/api/checkout', verifyVisitor, (req, res) => {
-  const { risk } = req.sentinel || {};
+  const { risk } = req.eyes || {};
   
   if (risk?.level === 'critical') {
     return res.status(403).json({
@@ -256,9 +257,9 @@ app.listen(3000);`
 
 // --- PHP ---
 const PHP_EXAMPLE = `<?php
-// Sentinel PHP Integration
+// Eyes PHP Integration
 
-class Sentinel {
+class Eyes {
     private string $secretKey;
     private string $apiUrl = '${API_URL}';
     
@@ -296,10 +297,10 @@ class Sentinel {
 }
 
 // Usage in checkout
-$sentinel = new Sentinel($_ENV['SENTINEL_SECRET_KEY']);
+$eyes = new Eyes($_ENV['EYES_SECRET_KEY']);
 
 try {
-    $verification = $sentinel->verify($_POST['visitorId'], $_POST['requestId']);
+    $verification = $eyes->verify($_POST['visitorId'], $_POST['requestId']);
     $riskLevel = $verification['risk']['level'] ?? 'unknown';
     
     if ($riskLevel === 'critical') {
@@ -313,7 +314,7 @@ try {
     
 } catch (Exception $e) {
     // Log error but don't block the user
-    error_log('Sentinel error: ' . $e->getMessage());
+    error_log('Eyes error: ' . $e->getMessage());
     echo json_encode(['success' => true]);
 }`
 
@@ -322,7 +323,7 @@ const RUBY_EXAMPLE = `require 'net/http'
 require 'json'
 require 'uri'
 
-class Sentinel
+class Eyes
   API_URL = '${API_URL}'
   
   def initialize(secret_key)
@@ -365,14 +366,14 @@ class CheckoutController < ApplicationController
   private
   
   def verify_visitor
-    sentinel = Sentinel.new(ENV['SENTINEL_SECRET_KEY'])
-    verification = sentinel.verify(
+    eyes = Eyes.new(ENV['EYES_SECRET_KEY'])
+    verification = eyes.verify(
       visitor_id: params[:visitorId],
       request_id: params[:requestId]
     )
     @risk_level = verification.dig('risk', 'level')
   rescue => e
-    Rails.logger.error("Sentinel error: #{e.message}")
+    Rails.logger.error("Eyes error: #{e.message}")
     @risk_level = nil # Fail open
   end
 end`
@@ -408,7 +409,7 @@ type VerifyResponse struct {
 }
 
 func verifyVisitor(visitorID, requestID string) (*VerifyResponse, error) {
-    secretKey := os.Getenv("SENTINEL_SECRET_KEY")
+    secretKey := os.Getenv("EYES_SECRET_KEY")
     
     payload, _ := json.Marshal(VerifyRequest{
         VisitorID: visitorID,
@@ -461,7 +462,7 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 const CURL_ANALYZE = `# Analyze a visitor (client-side SDK does this automatically)
 curl -X POST ${API_URL}/v1/analyze \\
   -H "Content-Type: application/json" \\
-  -H "X-API-Key: stl_live_your_api_key_here" \\
+  -H "X-API-Key: eye_live_your_api_key_here" \\
   -d '{
     "signals": {
       "userAgent": "Mozilla/5.0...",
@@ -477,7 +478,7 @@ curl -X POST ${API_URL}/v1/analyze \\
 const CURL_VERIFY = `# Verify a visitor server-side
 curl -X POST ${API_URL}/v1/verify \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer stl_secret_your_secret_key" \\
+  -H "Authorization: Bearer eye_secret_your_secret_key" \\
   -d '{
     "visitorId": "fp_a1b2c3d4e5f6g7h8i9j0",
     "requestId": "req_xyz123abc456"
@@ -572,7 +573,7 @@ const ERROR_EXAMPLES = [
     response: `{
   "error": {
     "code": "SUSPENDED",
-    "message": "Account suspended. Contact support@usesentinel.dev"
+    "message": "Account suspended. Contact support@theallseeingeyes.org"
   }
 }`,
   },
@@ -605,8 +606,8 @@ function Section({
   return (
     <section id={id} className="scroll-mt-24">
       <div className="flex items-start gap-4 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-          <ChevronRight className="h-5 w-5 text-primary" />
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/5 flex items-center justify-center shrink-0">
+          <ChevronRight className="h-5 w-5 text-violet-400" />
         </div>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
@@ -632,7 +633,7 @@ function Step({
 }) {
   return (
     <div className="flex items-start gap-4 py-4">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-primary/25">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-lg shadow-violet-500/25">
         {number}
       </div>
       <div className="flex-1 pt-0.5">
@@ -654,9 +655,9 @@ function FeatureCard({
   description: string
 }) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5 text-primary" />
+    <div className="flex items-start gap-4 p-4 rounded-lg border border-violet-500/10 bg-card hover:bg-violet-500/5 transition-colors">
+      <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-violet-400" />
       </div>
       <div>
         <h4 className="font-semibold mb-1">{title}</h4>
@@ -673,10 +674,10 @@ export default function IntegrationGuidePage() {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-primary/80">
-              <Shield className="h-5 w-5 text-primary-foreground" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Eye className="h-5 w-5 text-white" />
             </div>
-            <span>Sentinel</span>
+            <span className="bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link
@@ -699,7 +700,7 @@ export default function IntegrationGuidePage() {
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-1 text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-md hover:from-violet-600 hover:to-purple-700 transition-colors"
             >
               Get API Key
               <ArrowRight className="h-3.5 w-3.5" />
@@ -723,18 +724,18 @@ export default function IntegrationGuidePage() {
                     <a
                       key={item.id}
                       href={`#${item.id}`}
-                      className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors group"
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-violet-500/10 rounded-md transition-colors group"
                     >
-                      <Icon className="h-4 w-4 group-hover:text-primary transition-colors" />
+                      <Icon className="h-4 w-4 group-hover:text-violet-400 transition-colors" />
                       {item.label}
                     </a>
                   )
                 })}
               </nav>
 
-              <div className="mt-8 p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-transparent">
+              <div className="mt-8 p-4 rounded-lg border border-violet-500/10 bg-gradient-to-br from-violet-500/5 to-transparent">
                 <div className="flex items-center gap-2 mb-2">
-                  <Cpu className="h-4 w-4 text-primary" />
+                  <Cpu className="h-4 w-4 text-violet-400" />
                   <p className="text-sm font-medium">SDK Size</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
@@ -743,14 +744,14 @@ export default function IntegrationGuidePage() {
                 </p>
               </div>
 
-              <div className="mt-4 p-4 rounded-lg border bg-muted/30">
+              <div className="mt-4 p-4 rounded-lg border border-violet-500/10 bg-muted/30">
                 <p className="text-sm font-medium mb-2">Need help?</p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Our team is here to help you integrate Sentinel.
+                  Our team is here to help you integrate Eyes.
                 </p>
                 <a
-                  href="mailto:support@usesentinel.dev"
-                  className="text-xs text-primary hover:underline"
+                  href="mailto:support@theallseeingeyes.org"
+                  className="text-xs text-violet-400 hover:underline"
                 >
                   Contact support →
                 </a>
@@ -762,31 +763,31 @@ export default function IntegrationGuidePage() {
           <main className="min-w-0">
             {/* Hero */}
             <div className="mb-12">
-              <div className="inline-flex items-center gap-2 text-sm text-primary font-medium mb-4 px-3 py-1 rounded-full bg-primary/10">
+              <div className="inline-flex items-center gap-2 text-sm text-violet-400 font-medium mb-4 px-3 py-1 rounded-full bg-violet-500/10">
                 <BookOpen className="h-4 w-4" />
                 Documentation
               </div>
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                Integration Guide
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
+                <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Integration Guide</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                Learn how to integrate Sentinel SDK into your application.
+                Learn how to integrate the Eyes SDK into your application.
                 Add browser fingerprinting and fraud detection in{' '}
                 <strong className="text-foreground">under 5 minutes</strong>.
               </p>
 
               {/* Quick stats */}
               <div className="grid grid-cols-3 gap-4 mt-8 max-w-lg">
-                <div className="text-center p-3 rounded-lg bg-muted/30 border">
-                  <div className="text-2xl font-bold text-primary">5KB</div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border border-violet-500/10">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">5KB</div>
                   <div className="text-xs text-muted-foreground">SDK Size</div>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-muted/30 border">
-                  <div className="text-2xl font-bold text-primary">&lt;50ms</div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border border-violet-500/10">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">&lt;50ms</div>
                   <div className="text-xs text-muted-foreground">Latency</div>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-muted/30 border">
-                  <div className="text-2xl font-bold text-primary">99.9%</div>
+                <div className="text-center p-3 rounded-lg bg-muted/30 border border-violet-500/10">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">99.9%</div>
                   <div className="text-xs text-muted-foreground">Uptime</div>
                 </div>
               </div>
@@ -807,7 +808,7 @@ export default function IntegrationGuidePage() {
                     </p>
                     <Link
                       href="/signup"
-                      className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                      className="inline-flex items-center gap-2 text-sm text-violet-400 hover:underline font-medium"
                     >
                       Create free account
                       <ArrowRight className="h-3 w-3" />
@@ -855,7 +856,7 @@ export default function IntegrationGuidePage() {
                       CDN (Recommended for quick start)
                     </h3>
                     <CodeBlock
-                      code={`<script src="${API_URL}/sdk/sentinel.min.js"></script>`}
+                      code={`<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>`}
                       language="html"
                     />
                   </div>
@@ -865,7 +866,7 @@ export default function IntegrationGuidePage() {
                       <Terminal className="h-4 w-4 text-muted-foreground" />
                       Package Manager
                     </h3>
-                    <InstallTabs packageName="@sentinel/sdk" />
+                    <InstallTabs packageName="@eyes/sdk" />
                   </div>
                 </div>
 
@@ -879,7 +880,7 @@ export default function IntegrationGuidePage() {
               <Section
                 id="client-examples"
                 title="Client Integration"
-                description="Integrate Sentinel into your frontend application using your preferred framework."
+                description="Integrate Eyes into your frontend application using your preferred framework."
               >
                 <LanguageTabs
                   examples={[
@@ -915,7 +916,7 @@ export default function IntegrationGuidePage() {
                 description="Verify visitors server-side using your secret API key. Prevents client-side tampering."
               >
                 <Callout type="security" title="Use your secret key server-side">
-                  Never expose your <code className="text-xs bg-muted px-1.5 py-0.5 rounded">stl_secret_*</code>{' '}
+                  Never expose your <code className="text-xs bg-muted px-1.5 py-0.5 rounded">eye_secret_*</code>{' '}
                   key in client-side code. It should only be used on your server
                   for verification.
                 </Callout>
@@ -963,15 +964,15 @@ export default function IntegrationGuidePage() {
               <Section
                 id="api-reference"
                 title="API Reference"
-                description="Complete reference for the Sentinel API endpoints."
+                description="Complete reference for the Eyes API endpoints."
               >
-                <div className="mb-6 p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="mb-6 p-4 rounded-lg border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent">
                   <p className="text-sm mb-3">
                     For interactive API documentation with a "Try it" feature, check out our OpenAPI reference:
                   </p>
                   <Link
                     href="/docs/api-reference"
-                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                    className="inline-flex items-center gap-2 text-sm text-violet-400 hover:underline font-medium"
                   >
                     View Interactive API Docs
                     <ArrowRight className="h-3 w-3" />
@@ -980,10 +981,10 @@ export default function IntegrationGuidePage() {
 
                 <div className="space-y-8">
                   {/* Constructor */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
+                  <div className="border border-violet-500/10 rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 px-4 py-3 border-b border-violet-500/10 flex items-center justify-between">
                       <code className="text-sm font-semibold">
-                        new Sentinel(options)
+                        new Eyes(options)
                       </code>
                       <span className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded">
                         Constructor
@@ -991,24 +992,24 @@ export default function IntegrationGuidePage() {
                     </div>
                     <div className="p-4">
                       <p className="text-sm text-muted-foreground mb-4">
-                        Creates a new Sentinel client instance.
+                        Creates a new Eyes client instance.
                       </p>
                       <h4 className="text-sm font-semibold mb-2">Options</h4>
-                      <div className="border rounded-md divide-y text-sm">
+                      <div className="border border-violet-500/10 rounded-md divide-y divide-violet-500/10 text-sm">
                         <div className="p-3 grid grid-cols-[120px_1fr] gap-4">
-                          <code className="text-primary">apiKey</code>
+                          <code className="text-violet-400">apiKey</code>
                           <div>
                             <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded mr-2">
                               required
                             </span>
                             <span className="text-muted-foreground">
-                              Your API key (starts with <code>stl_live_</code> or{' '}
-                              <code>stl_test_</code>)
+                              Your API key (starts with <code>eye_live_</code> or{' '}
+                              <code>eye_test_</code>)
                             </span>
                           </div>
                         </div>
                         <div className="p-3 grid grid-cols-[120px_1fr] gap-4">
-                          <code className="text-primary">endpoint</code>
+                          <code className="text-violet-400">endpoint</code>
                           <div>
                             <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded mr-2">
                               optional
@@ -1023,10 +1024,10 @@ export default function IntegrationGuidePage() {
                   </div>
 
                   {/* Analyze method */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 px-4 py-3 border-b flex items-center justify-between">
+                  <div className="border border-violet-500/10 rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 px-4 py-3 border-b border-violet-500/10 flex items-center justify-between">
                       <code className="text-sm font-semibold">
-                        sentinel.analyze(): Promise&lt;AnalyzeResponse&gt;
+                        eyes.analyze(): Promise&lt;AnalyzeResponse&gt;
                       </code>
                       <span className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
                         Method
@@ -1053,7 +1054,7 @@ export default function IntegrationGuidePage() {
                         ].map((signal) => (
                           <div
                             key={signal.label}
-                            className="flex items-center gap-2 text-muted-foreground p-2 rounded bg-muted/30"
+                            className="flex items-center gap-2 text-muted-foreground p-2 rounded bg-violet-500/5"
                           >
                             <span>{signal.icon}</span>
                             {signal.label}
@@ -1117,7 +1118,7 @@ export default function IntegrationGuidePage() {
 
                 <h3 className="font-semibold mt-10 mb-4">Response Fields</h3>
 
-                <div className="border rounded-lg divide-y">
+                <div className="border border-violet-500/10 rounded-lg divide-y divide-violet-500/10">
                   {[
                     {
                       field: 'visitorId',
@@ -1154,7 +1155,7 @@ export default function IntegrationGuidePage() {
                       key={item.field}
                       className="p-4 grid grid-cols-1 sm:grid-cols-[140px_80px_1fr] gap-2 sm:gap-4 text-sm"
                     >
-                      <code className="text-primary font-semibold">
+                      <code className="text-violet-400 font-semibold">
                         {item.field}
                       </code>
                       <span className="text-muted-foreground font-mono text-xs">
@@ -1187,11 +1188,11 @@ export default function IntegrationGuidePage() {
                   ].map((item) => (
                     <div
                       key={item.signal}
-                      className="flex items-center gap-3 p-3 border rounded-lg text-sm bg-card hover:bg-muted/30 transition-colors"
+                      className="flex items-center gap-3 p-3 border border-violet-500/10 rounded-lg text-sm bg-card hover:bg-violet-500/5 transition-colors"
                     >
                       <span className="text-lg">{item.icon}</span>
                       <div>
-                        <code className="text-primary text-xs font-semibold">
+                        <code className="text-violet-400 text-xs font-semibold">
                           {item.signal}
                         </code>
                         <p className="text-muted-foreground text-xs">
@@ -1213,7 +1214,7 @@ export default function IntegrationGuidePage() {
                 <ErrorTable errors={ERROR_EXAMPLES} />
 
                 <Callout type="warning" title="Fail-Open Design">
-                  Always implement a fail-open strategy. If Sentinel
+                  Always implement a fail-open strategy. If Eyes
                   encounters an error, allow the user to proceed rather than
                   blocking them. Use fraud detection to add friction (CAPTCHA,
                   verification), not to deny access entirely.
@@ -1224,7 +1225,7 @@ export default function IntegrationGuidePage() {
               <Section
                 id="best-practices"
                 title="Best Practices"
-                description="Tips for getting the most out of Sentinel."
+                description="Tips for getting the most out of Eyes."
               >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FeatureCard
@@ -1240,7 +1241,7 @@ export default function IntegrationGuidePage() {
                   <FeatureCard
                     icon={Lock}
                     title="Protect your keys"
-                    description="Publishable key (stl_live_*) is safe client-side. Keep secret key (stl_secret_*) on server only."
+                    description="Publishable key (eye_live_*) is safe client-side. Keep secret key (eye_secret_*) on server only."
                   />
                   <FeatureCard
                     icon={Zap}
@@ -1248,7 +1249,7 @@ export default function IntegrationGuidePage() {
                     description="100 requests/minute per key. Implement caching and upgrade your plan for high traffic."
                   />
                   <FeatureCard
-                    icon={Eye}
+                    icon={ScanEye}
                     title="Monitor your dashboard"
                     description="Watch for unusual patterns - sudden spikes in high-risk visitors may indicate an attack."
                   />
@@ -1264,7 +1265,7 @@ export default function IntegrationGuidePage() {
               <div className="border-t pt-12 mt-8">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold mb-4">
-                    Ready to get started?
+                    Ready to see everything?
                   </h2>
                   <p className="text-muted-foreground mb-6">
                     Create a free account and start protecting your application
@@ -1273,14 +1274,14 @@ export default function IntegrationGuidePage() {
                   <div className="flex items-center justify-center gap-4 flex-wrap">
                     <Link
                       href="/signup"
-                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-6 py-3 rounded-md font-semibold hover:from-violet-600 hover:to-purple-700 transition-colors shadow-lg shadow-violet-500/25"
                     >
                       Get your API key
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link
                       href="/dashboard"
-                      className="inline-flex items-center gap-2 border px-6 py-3 rounded-md font-semibold hover:bg-muted transition-colors"
+                      className="inline-flex items-center gap-2 border border-violet-500/20 px-6 py-3 rounded-md font-semibold hover:bg-violet-500/10 transition-colors"
                     >
                       Go to Dashboard
                     </Link>
@@ -1296,8 +1297,8 @@ export default function IntegrationGuidePage() {
       <footer className="border-t mt-20">
         <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span>Sentinel © {new Date().getFullYear()}</span>
+            <Eye className="h-4 w-4 text-violet-400" />
+            <span>Eyes © {new Date().getFullYear()} — The All Seeing Eyes</span>
           </div>
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-foreground transition-colors">
@@ -1310,7 +1311,7 @@ export default function IntegrationGuidePage() {
               Pricing
             </Link>
             <a
-              href="mailto:support@usesentinel.dev"
+              href="mailto:support@theallseeingeyes.org"
               className="hover:text-foreground transition-colors"
             >
               Support

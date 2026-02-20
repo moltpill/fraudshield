@@ -1,5 +1,5 @@
 {
-  "name": "@sentinel/api",
+  "name": "@eyes/api",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -23,7 +23,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@sentinel/shared": "workspace:*",
+    "@eyes/shared": "workspace:*",
     "@hono/node-server": "^1.19.9",
     "@prisma/client": "^5.22.0",
     "hono": "^4.12.0",

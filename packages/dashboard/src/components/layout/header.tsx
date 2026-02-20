@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, Shield } from 'lucide-react'
+import { Menu, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { SidebarNav } from './sidebar-nav'
@@ -32,8 +32,10 @@ export function Header({ email, name, tier }: HeaderProps) {
 
       {/* Mobile logo */}
       <Link href="/dashboard" className="flex items-center gap-2 font-semibold md:hidden">
-        <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span>Sentinel</span>
+        <div className="p-1 rounded-md bg-gradient-to-br from-violet-500 to-purple-600">
+          <Eye className="h-4 w-4 text-white" aria-hidden="true" />
+        </div>
+        <span className="bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</span>
       </Link>
 
       {/* Spacer */}
@@ -47,8 +49,10 @@ export function Header({ email, name, tier }: HeaderProps) {
         <SheetContent side="left" className="w-64 p-0">
           <SheetHeader className="h-16 flex-row items-center gap-2 px-6 border-b space-y-0">
             <SheetTitle className="flex items-center gap-2 font-semibold text-base">
-              <Shield className="h-5 w-5 text-primary" aria-hidden="true" />
-              Sentinel
+              <div className="p-1 rounded-md bg-gradient-to-br from-violet-500 to-purple-600">
+                <Eye className="h-4 w-4 text-white" aria-hidden="true" />
+              </div>
+              <span className="bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</span>
             </SheetTitle>
           </SheetHeader>
           <div className="py-4">

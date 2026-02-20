@@ -1,5 +1,5 @@
 {
-  "name": "sentinel",
+  "name": "eyes",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,12 +10,12 @@
     "test:coverage": "vitest run --coverage",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
-    "start:api": "pnpm --filter @sentinel/api start",
-    "start:dashboard": "pnpm --filter @sentinel/dashboard start",
-    "start:admin": "pnpm --filter @sentinel/admin start",
-    "build:api": "pnpm --filter @sentinel/api build && pnpm --filter @sentinel/api exec prisma generate",
-    "build:dashboard": "pnpm --filter @sentinel/dashboard build",
-    "build:admin": "pnpm --filter @sentinel/admin build"
+    "start:api": "pnpm --filter @eyes/api start",
+    "start:dashboard": "pnpm --filter @eyes/dashboard start",
+    "start:admin": "pnpm --filter @eyes/admin start",
+    "build:api": "pnpm --filter @eyes/api build && pnpm --filter @eyes/api exec prisma generate",
+    "build:dashboard": "pnpm --filter @eyes/dashboard build",
+    "build:admin": "pnpm --filter @eyes/admin build"
   },
   "devDependencies": {
     "vitest": "^3.0.0",

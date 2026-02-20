@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { 
-  Shield, 
   Eye, 
   Zap, 
   Lock, 
@@ -13,59 +12,59 @@ import {
   Clock,
   Code2,
   ChevronRight,
-  Menu,
-  X
+  Fingerprint,
+  ScanEye
 } from 'lucide-react'
 import { auth } from '@/auth'
 
 const FEATURES = [
   {
-    icon: Eye,
+    icon: Fingerprint,
     title: 'Browser Fingerprinting',
     description:
       'Canvas, WebGL, audio, and navigator signals create a stable visitor identity — even in incognito mode.',
-    gradient: 'from-blue-500/20 to-cyan-500/20',
-    iconColor: 'text-blue-500',
+    gradient: 'from-violet-500/20 to-purple-500/20',
+    iconColor: 'text-violet-500',
   },
   {
     icon: Globe,
     title: 'VPN & Proxy Detection',
     description:
       'Real-time lookup against 100k+ VPN and proxy CIDR ranges. Catch IP masking before it causes damage.',
-    gradient: 'from-green-500/20 to-emerald-500/20',
-    iconColor: 'text-green-500',
+    gradient: 'from-emerald-500/20 to-teal-500/20',
+    iconColor: 'text-emerald-500',
   },
   {
     icon: Lock,
     title: 'Tor Exit Node Detection',
     description:
       'Hourly-updated Tor exit node list catches anonymous traffic with blazing O(1) lookup performance.',
-    gradient: 'from-purple-500/20 to-violet-500/20',
-    iconColor: 'text-purple-500',
+    gradient: 'from-amber-500/20 to-orange-500/20',
+    iconColor: 'text-amber-500',
   },
   {
     icon: Bot,
     title: 'Bot & Headless Detection',
     description:
       'Detects Selenium, Puppeteer, PhantomJS, and other automation frameworks via browser artifacts.',
-    gradient: 'from-orange-500/20 to-amber-500/20',
-    iconColor: 'text-orange-500',
+    gradient: 'from-rose-500/20 to-pink-500/20',
+    iconColor: 'text-rose-500',
   },
   {
     icon: Zap,
     title: 'Real-time Risk Scoring',
     description:
       'Every visitor gets a 0–100 risk score in milliseconds. Act on low, medium, high, and critical thresholds.',
-    gradient: 'from-yellow-500/20 to-orange-500/20',
-    iconColor: 'text-yellow-500',
+    gradient: 'from-cyan-500/20 to-blue-500/20',
+    iconColor: 'text-cyan-500',
   },
   {
     icon: Clock,
     title: 'Timezone Mismatch',
     description:
       'Compare browser timezone against IP geolocation to catch VPN users who forget to change their clock.',
-    gradient: 'from-pink-500/20 to-rose-500/20',
-    iconColor: 'text-pink-500',
+    gradient: 'from-indigo-500/20 to-violet-500/20',
+    iconColor: 'text-indigo-500',
   },
 ]
 
@@ -132,16 +131,16 @@ const STATS = [
 ]
 
 const CODE_SNIPPET = `<!-- Add to your <head> -->
-<script src="https://cdn.usesentinel.dev/sdk/v1/sentinel.min.js"></script>
+<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>
 
 <script>
-  const sentinel = new Sentinel({ 
-    apiKey: 'stl_live_your_key_here' 
+  const eyes = new Eyes({ 
+    apiKey: 'eye_live_your_key_here' 
   });
 
   // Analyze visitor on critical actions
   document.getElementById('checkout').addEventListener('click', async () => {
-    const result = await sentinel.analyze();
+    const result = await eyes.analyze();
 
     if (result.risk.level === 'critical') {
       showCaptcha();  // Challenge high-risk visitors
@@ -157,20 +156,21 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* Gradient background effect */}
+      {/* Gradient background effect - mystical purple/violet theme */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-transparent blur-3xl" />
-        <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-violet-500/10 via-transparent to-transparent blur-3xl" />
+        <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-transparent blur-3xl" />
+        <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-indigo-500/15 via-transparent to-transparent blur-3xl" />
+        <div className="absolute top-1/4 left-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-amber-500/10 via-transparent to-transparent blur-3xl" />
       </div>
 
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-lg">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-primary/80">
-              <Shield className="h-5 w-5 text-primary-foreground" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Eye className="h-5 w-5 text-white" />
             </div>
-            <span className="hidden sm:inline">Sentinel</span>
+            <span className="hidden sm:inline bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-6">
@@ -186,13 +186,19 @@ export default async function LandingPage() {
             >
               Docs
             </a>
+            <a
+              href="/docs/api-reference"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              API
+            </a>
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25"
+                className="inline-flex items-center gap-1.5 text-sm font-medium bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/25"
               >
                 Dashboard
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -204,7 +210,7 @@ export default async function LandingPage() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium bg-gradient-to-r from-violet-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/25"
                 >
                   Get started
                   <Sparkles className="h-3.5 w-3.5" />
@@ -220,18 +226,20 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 sm:pb-20">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full mb-6 border border-primary/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              AI-Powered Fraud Detection
+            <div className="inline-flex items-center gap-2 bg-violet-500/10 text-violet-400 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-full mb-6 border border-violet-500/20">
+              <ScanEye className="h-3.5 w-3.5" />
+              The All Seeing Eyes
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text">
-              Guardian of Your Traffic
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6">
+              <span className="bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text">See Everything.</span>
+              <br />
+              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">Trust No One.</span>
             </h1>
             
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-              Sentinel identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
+              Eyes identifies bots, VPNs, and fraudulent visitors using browser fingerprinting 
               and IP intelligence. <span className="text-foreground font-medium">Add 2 lines of code. Get a risk score in milliseconds.</span>
             </p>
 
@@ -239,10 +247,10 @@ export default async function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
               <Link
                 href="/signup"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-all text-base shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-violet-600 hover:to-purple-700 transition-all text-base shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02]"
               >
                 Start protecting for free
-                <ArrowRight className="h-4 w-4" />
+                <Eye className="h-4 w-4" />
               </Link>
               <a
                 href="#how-it-works"
@@ -261,8 +269,8 @@ export default async function LandingPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mt-16 max-w-3xl mx-auto">
             {STATS.map((stat) => (
-              <div key={stat.label} className="text-center p-4 rounded-xl bg-muted/30 border">
-                <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">{stat.value}</div>
+              <div key={stat.label} className="text-center p-4 rounded-xl bg-muted/30 border border-violet-500/10">
+                <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent mb-1">{stat.value}</div>
                 <div className="text-xs sm:text-sm text-muted-foreground">{stat.label}</div>
               </div>
             ))}
@@ -274,11 +282,11 @@ export default async function LandingPage() {
       <section id="features" className="border-t bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 text-primary text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 text-violet-400 text-sm font-medium mb-4">
               <TrendingUp className="h-4 w-4" />
               Detection Signals
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Everything you need to detect fraud</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">We See What Others Miss</h2>
             <p className="text-muted-foreground max-w-xl mx-auto text-base sm:text-lg">
               Six layers of detection combined into a single risk score.
             </p>
@@ -290,7 +298,7 @@ export default async function LandingPage() {
               return (
                 <div 
                   key={feature.title} 
-                  className="group relative bg-background rounded-2xl border p-6 hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5"
+                  className="group relative bg-background rounded-2xl border border-violet-500/10 p-6 hover:border-violet-500/30 transition-all hover:shadow-lg hover:shadow-violet-500/5"
                 >
                   <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
                   <div className="relative">
@@ -312,13 +320,13 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 text-primary text-sm font-medium mb-4">
+              <div className="inline-flex items-center gap-2 text-violet-400 text-sm font-medium mb-4">
                 <Code2 className="h-4 w-4" />
                 Simple Integration
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Integrate in under 5 minutes</h2>
               <p className="text-muted-foreground mb-6 text-base sm:text-lg leading-relaxed">
-                One script tag. One API call. Full fraud protection. Sentinel runs entirely in the 
+                One script tag. One API call. Full fraud protection. Eyes runs entirely in the 
                 browser and sends a fingerprint to our API — no PII, no cookies, GDPR-friendly.
               </p>
               <ul className="space-y-3">
@@ -329,27 +337,36 @@ export default async function LandingPage() {
                   'Fail-open design — errors never break your flow',
                 ].map((point) => (
                   <li key={point} className="flex items-start gap-3 text-sm">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle className="h-3 w-3 text-primary" />
+                    <div className="w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle className="h-3 w-3 text-violet-400" />
                     </div>
                     <span className="text-muted-foreground">{point}</span>
                   </li>
                 ))}
               </ul>
               
-              <Link
-                href="/docs/integration-guide"
-                className="inline-flex items-center gap-2 text-primary font-medium mt-6 hover:underline"
-              >
-                Read the full docs
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <Link
+                  href="/docs/integration-guide"
+                  className="inline-flex items-center gap-2 text-violet-400 font-medium hover:underline"
+                >
+                  Integration Guide
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/docs/api-reference"
+                  className="inline-flex items-center gap-2 text-violet-400 font-medium hover:underline"
+                >
+                  API Reference
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
             
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-violet-500/20 to-primary/20 rounded-2xl blur-xl opacity-50" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-50" />
               <div className="relative">
-                <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
+                <div className="bg-zinc-950 rounded-xl border border-violet-500/20 overflow-hidden">
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 bg-zinc-900/50">
                     <div className="flex gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
@@ -372,7 +389,7 @@ export default async function LandingPage() {
       <section id="pricing" className="border-t bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 text-primary text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 text-violet-400 text-sm font-medium mb-4">
               <Sparkles className="h-4 w-4" />
               Pricing
             </div>
@@ -386,13 +403,13 @@ export default async function LandingPage() {
                 key={plan.name}
                 className={`relative bg-background rounded-2xl border p-6 flex flex-col transition-all hover:shadow-lg ${
                   plan.highlighted 
-                    ? 'border-primary ring-2 ring-primary/20 shadow-xl shadow-primary/10' 
-                    : 'hover:border-muted-foreground/30'
+                    ? 'border-violet-500 ring-2 ring-violet-500/20 shadow-xl shadow-violet-500/10' 
+                    : 'border-violet-500/10 hover:border-violet-500/30'
                 }`}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <div className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                    <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
                       Most popular
                     </div>
                   </div>
@@ -410,7 +427,7 @@ export default async function LandingPage() {
                 <ul className="space-y-3 flex-1 mb-6">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-violet-400 mt-0.5 shrink-0" />
                       <span className="text-muted-foreground">{f}</span>
                     </li>
                   ))}
@@ -420,8 +437,8 @@ export default async function LandingPage() {
                   href={plan.href}
                   className={`text-sm font-medium text-center px-4 py-2.5 rounded-lg transition-all ${
                     plan.highlighted
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25'
-                      : 'border hover:bg-muted'
+                      ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 shadow-lg shadow-violet-500/25'
+                      : 'border border-violet-500/20 hover:bg-violet-500/10'
                   }`}
                 >
                   {plan.cta}
@@ -432,7 +449,7 @@ export default async function LandingPage() {
           
           <p className="text-center text-sm text-muted-foreground mt-10">
             Need more than 1M requests/month?{' '}
-            <a href="mailto:enterprise@usesentinel.dev" className="text-primary hover:underline font-medium">
+            <a href="mailto:enterprise@theallseeingeyes.org" className="text-violet-400 hover:underline font-medium">
               Contact us for Enterprise pricing
             </a>
           </p>
@@ -442,35 +459,35 @@ export default async function LandingPage() {
       {/* Final CTA */}
       <section className="border-t">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-violet-600 p-8 sm:p-12 text-center">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-8 sm:p-12 text-center">
             {/* Background decoration */}
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvZz48L3N2Zz4=')] opacity-40" />
             
             <div className="relative">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur mb-6">
-                <Shield className="h-8 w-8 text-white" />
+                <Eye className="h-8 w-8 text-white" />
               </div>
               
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Ready to stop fraud?
+                Ready to see everything?
               </h2>
               <p className="text-white/80 mb-8 max-w-lg mx-auto text-base sm:text-lg">
-                Join developers protecting their apps with Sentinel. Free plan available — no credit card required.
+                Join developers protecting their apps with Eyes. Free plan available — no credit card required.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   href="/signup"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-white/90 transition-all text-base shadow-xl"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-violet-600 px-8 py-3 rounded-lg font-semibold hover:bg-white/90 transition-all text-base shadow-xl"
                 >
                   Get started free
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/docs/integration-guide"
+                  href="/docs/api-reference"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-white/90 hover:text-white font-medium transition-colors px-6 py-3"
                 >
-                  Read the docs
+                  Explore the API
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -484,10 +501,10 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="p-1 rounded bg-muted">
-                <Shield className="h-4 w-4" />
+              <div className="p-1 rounded bg-violet-500/10">
+                <Eye className="h-4 w-4 text-violet-400" />
               </div>
-              <span className="text-sm">Sentinel © {new Date().getFullYear()}</span>
+              <span className="text-sm">Eyes © {new Date().getFullYear()} — The All Seeing Eyes</span>
             </div>
             
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -500,7 +517,10 @@ export default async function LandingPage() {
               <a href="/docs/integration-guide" className="hover:text-foreground transition-colors">
                 Docs
               </a>
-              <a href="mailto:support@usesentinel.dev" className="hover:text-foreground transition-colors">
+              <a href="/docs/api-reference" className="hover:text-foreground transition-colors">
+                API
+              </a>
+              <a href="mailto:support@theallseeingeyes.org" className="hover:text-foreground transition-colors">
                 Support
               </a>
             </div>

@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Shield, Lock } from 'lucide-react'
+import { Eye, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,10 +38,10 @@ function AdminLoginForm() {
   }
 
   return (
-    <Card className="border-2">
+    <Card className="border-2 border-violet-500/20">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-2">
-          <Lock className="h-5 w-5 text-muted-foreground" />
+          <Lock className="h-5 w-5 text-violet-400" />
         </div>
         <CardTitle>Admin Access</CardTitle>
         <CardDescription>
@@ -55,11 +55,12 @@ function AdminLoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@usesentinel.dev"
+              placeholder="admin@theallseeingeyes.org"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              className="border-violet-500/20 focus:border-violet-500"
             />
           </div>
           <div className="space-y-2">
@@ -71,6 +72,7 @@ function AdminLoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              className="border-violet-500/20 focus:border-violet-500"
             />
           </div>
           {error && (
@@ -78,7 +80,7 @@ function AdminLoginForm() {
               {error}
             </p>
           )}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700" disabled={loading}>
             {loading ? 'Authenticating...' : 'Sign In'}
           </Button>
         </form>
@@ -90,14 +92,19 @@ function AdminLoginForm() {
 export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
+      {/* Background effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-1/2 -right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-transparent blur-3xl" />
+      </div>
+      
       <div className="w-full max-w-md px-4">
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Shield className="h-8 w-8 text-primary" />
+            <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+              <Eye className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Sentinel</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent">Eyes</h1>
               <p className="text-sm text-muted-foreground">Admin Panel</p>
             </div>
           </div>

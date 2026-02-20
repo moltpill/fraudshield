@@ -3,8 +3,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 
 export const metadata: Metadata = {
-  title: 'Sentinel Admin',
-  description: 'Admin panel for Sentinel platform management',
+  title: 'Eyes Admin | The All Seeing Eyes',
+  description: 'Admin panel for Eyes platform management',
 }
 
 export default function RootLayout({

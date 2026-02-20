@@ -4,7 +4,7 @@ export { getBotSignals } from './signals/bot'
 export type { BotSignals } from './signals/bot'
 
 /**
- * Standard error codes returned by the Sentinel API
+ * Standard error codes returned by the Eyes API
  */
 export const ErrorCode = {
   /** API key is invalid or not found */
@@ -46,46 +46,51 @@ import { getWebRTCIPs } from './signals/webrtc'
 import { getBotSignals } from './signals/bot'
 
 /**
- * Error options for SentinelError
+ * Error options for EyesError
  */
-export interface SentinelErrorOptions {
+export interface EyesErrorOptions {
   statusCode?: number
   code?: string
 }
 
+// Legacy alias
+export type SentinelErrorOptions = EyesErrorOptions
+
 /**
- * Custom error class for Sentinel SDK errors
+ * Custom error class for Eyes SDK errors
  */
-export class SentinelError extends Error {
+export class EyesError extends Error {
   readonly statusCode?: number
   readonly code?: string
 
-  constructor(message: string, options?: SentinelErrorOptions) {
+  constructor(message: string, options?: EyesErrorOptions) {
     super(message)
-    this.name = 'SentinelError'
+    this.name = 'EyesError'
     this.statusCode = options?.statusCode
     this.code = options?.code
 
     // Fix prototype chain for instanceof checks
-    Object.setPrototypeOf(this, SentinelError.prototype)
+    Object.setPrototypeOf(this, EyesError.prototype)
   }
 }
 
-// Legacy alias for backwards compatibility
-export { SentinelError as FraudShieldError }
+// Legacy aliases for backwards compatibility
+export { EyesError as SentinelError }
+export { EyesError as FraudShieldError }
 
 /**
- * Sentinel SDK configuration options
+ * Eyes SDK configuration options
  */
-export interface SentinelOptions {
+export interface EyesOptions {
   /** API key for authentication (required) */
   apiKey: string
   /** Custom API endpoint (optional) */
   endpoint?: string
 }
 
-// Legacy alias
-export type FraudShieldOptions = SentinelOptions
+// Legacy aliases
+export type SentinelOptions = EyesOptions
+export type FraudShieldOptions = EyesOptions
 
 /**
  * Response from the analyze API
@@ -99,28 +104,29 @@ export interface AnalyzeResponse {
 }
 
 /**
- * Sentinel SDK main class - AI-Powered Fraud Detection
+ * Eyes SDK main class - The All Seeing Eyes
+ * AI-Powered Fraud Detection: See Everything. Trust No One.
  * 
  * @example
  * ```ts
- * const sdk = new Sentinel({ apiKey: 'stl_live_xxx' })
+ * const sdk = new Eyes({ apiKey: 'eye_live_xxx' })
  * const result = await sdk.analyze()
  * console.log(result.visitorId, result.riskScore)
  * ```
  */
-export class Sentinel {
+export class Eyes {
   private readonly _apiKey: string
   private readonly _endpoint: string
 
-  private static readonly DEFAULT_ENDPOINT = 'https://api.usesentinel.dev'
+  private static readonly DEFAULT_ENDPOINT = 'https://api.theallseeingeyes.org'
 
-  constructor(options: SentinelOptions) {
+  constructor(options: EyesOptions) {
     if (!options.apiKey || options.apiKey.trim() === '') {
       throw new Error('apiKey is required')
     }
 
     this._apiKey = options.apiKey
-    this._endpoint = options.endpoint ?? Sentinel.DEFAULT_ENDPOINT
+    this._endpoint = options.endpoint ?? Eyes.DEFAULT_ENDPOINT
   }
 
   /** Get the configured endpoint */
@@ -140,10 +146,10 @@ export class Sentinel {
    * Analyze the current browser/device and return fraud detection results
    * 
    * Collects all signals (canvas, webgl, audio, navigator, screen, timezone,
-   * WebRTC IPs, bot signals) and sends them to the Sentinel API.
+   * WebRTC IPs, bot signals) and sends them to the Eyes API.
    * 
    * @returns Promise<AnalyzeResponse> - The analysis result from the API
-   * @throws {SentinelError} On network errors or API error responses
+   * @throws {EyesError} On network errors or API error responses
    * 
    * @example
    * ```ts
@@ -152,7 +158,7 @@ export class Sentinel {
    *   console.log('Visitor ID:', result.visitorId)
    *   console.log('Risk Score:', result.riskScore)
    * } catch (error) {
-   *   if (error instanceof SentinelError) {
+   *   if (error instanceof EyesError) {
    *     console.error('API Error:', error.code, error.message)
    *   }
    * }
@@ -199,7 +205,7 @@ export class Sentinel {
     } catch (error) {
       // Network error
       const message = error instanceof Error ? error.message : 'Network error'
-      throw new SentinelError(message, { code: ErrorCode.NETWORK_ERROR })
+      throw new EyesError(message, { code: ErrorCode.NETWORK_ERROR })
     }
 
     if (!response.ok) {
@@ -212,7 +218,7 @@ export class Sentinel {
       }
 
       const message = errorData.error || `HTTP ${response.status} error`
-      throw new SentinelError(message, {
+      throw new EyesError(message, {
         statusCode: response.status,
         code: errorData.code,
       })
@@ -223,5 +229,6 @@ export class Sentinel {
   }
 }
 
-// Legacy alias for backwards compatibility
-export { Sentinel as FraudShield }
+// Legacy aliases for backwards compatibility
+export { Eyes as Sentinel }
+export { Eyes as FraudShield }

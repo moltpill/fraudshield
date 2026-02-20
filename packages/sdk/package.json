@@ -1,5 +1,5 @@
 {
-  "name": "@sentinel/sdk",
+  "name": "@eyes/sdk",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -25,7 +25,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@sentinel/shared": "workspace:*"
+    "@eyes/shared": "workspace:*"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
