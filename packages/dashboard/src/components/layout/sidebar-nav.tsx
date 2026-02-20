@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, Key, LayoutDashboard, Settings, Users } from 'lucide-react'
+import { BarChart3, CreditCard, Key, LayoutDashboard, Settings, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/dashboard/visitors', label: 'Visitors', icon: Users },
   { href: '/dashboard/api-keys', label: 'API Keys', icon: Key },
   { href: '/dashboard/usage', label: 'Usage', icon: BarChart3 },
+  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
