@@ -1,0 +1,22 @@
+# FraudShield IP Intelligence List Update Schedule
+# Install with: crontab crontab.example
+#
+# Adjust paths to match your deployment directory.
+# Logs are appended to /var/log/fraudshield-ip-update.log
+
+SCRIPTS=/opt/fraudshield/packages/api/scripts
+DATA=/opt/fraudshield/packages/api/data
+LOG=/var/log/fraudshield-ip-update.log
+
+# Tor exit nodes — update hourly (exits change frequently)
+0 * * * *  $SCRIPTS/update-tor.sh $DATA >> $LOG 2>&1
+
+# VPN ranges — update daily at 04:00
+0 4 * * *  $SCRIPTS/update-vpn.sh $DATA >> $LOG 2>&1
+
+# Datacenter ranges — update weekly on Sunday at 03:00
+0 3 * * 0  $SCRIPTS/update-datacenter.sh $DATA >> $LOG 2>&1
+
+# GeoLite2 database — update weekly on Sunday at 02:00
+# Requires MAXMIND_LICENSE_KEY environment variable
+0 2 * * 0  MAXMIND_LICENSE_KEY=your_key_here $SCRIPTS/update-geolite2.sh $DATA >> $LOG 2>&1
