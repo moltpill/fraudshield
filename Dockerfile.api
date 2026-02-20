@@ -30,7 +30,7 @@ RUN pnpm --filter @fraudshield/api   exec prisma generate
 RUN pnpm --filter @fraudshield/api   build
 
 # Prune to production-only deps in an isolated deploy directory
-RUN pnpm deploy --filter @fraudshield/api --prod /deploy
+RUN pnpm deploy --legacy --filter @fraudshield/api --prod /deploy
 
 # ── Stage 2: Runtime ─────────────────────────────────────────
 FROM node:20-alpine AS runtime
