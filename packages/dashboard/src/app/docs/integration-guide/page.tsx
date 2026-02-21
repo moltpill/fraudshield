@@ -67,7 +67,7 @@ const SCRIPT_TAG_EXAMPLE = `<!-- Add to your <head> or before </body> -->
 
 // --- React/Next.js ---
 const REACT_EXAMPLE = `import { useEffect, useState } from 'react';
-import { Eyes } from '@eyes/sdk';
+import { Eyes } from '@allseeingeyes/sdk';
 
 export function FraudProtection({ children }) {
   const [visitor, setVisitor] = useState(null);
@@ -107,7 +107,7 @@ export function FraudProtection({ children }) {
 // --- Vue.js ---
 const VUE_EXAMPLE = `<script setup>
 import { ref, onMounted, provide } from 'vue';
-import { Eyes } from '@eyes/sdk';
+import { Eyes } from '@allseeingeyes/sdk';
 
 const visitor = ref(null);
 const loading = ref(true);
@@ -856,7 +856,11 @@ export default function IntegrationGuidePage() {
                       CDN (Recommended for quick start)
                     </h3>
                     <CodeBlock
-                      code={`<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>`}
+                      code={`<!-- Primary CDN -->
+<script src="https://cdn.theallseeingeyes.org/sdk/v1/eyes.min.js"></script>
+
+<!-- Alternative: jsDelivr CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@allseeingeyes/sdk"></script>`}
                       language="html"
                     />
                   </div>
@@ -866,13 +870,12 @@ export default function IntegrationGuidePage() {
                       <Terminal className="h-4 w-4 text-muted-foreground" />
                       Package Manager
                     </h3>
-                    <InstallTabs packageName="@eyes/sdk" />
+                    <InstallTabs packageName="@allseeingeyes/sdk" />
                   </div>
                 </div>
 
                 <Callout type="info" title="TypeScript Support">
-                  The SDK ships with full TypeScript definitions. No additional
-                  @types packages needed.
+                  The <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">@allseeingeyes/sdk</code> package ships with full TypeScript definitions. No additional @types packages needed.
                 </Callout>
               </Section>
 
