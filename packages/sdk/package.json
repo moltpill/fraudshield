@@ -1,9 +1,31 @@
 {
-  "name": "@eyes/sdk",
+  "name": "@allseeingeyes/sdk",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
+  "description": "The All Seeing Eyes - AI-Powered Fraud Detection SDK. See Everything. Trust No One.",
+  "keywords": [
+    "fraud-detection",
+    "fingerprinting",
+    "bot-detection",
+    "device-fingerprint",
+    "browser-fingerprint",
+    "security",
+    "anti-fraud",
+    "risk-assessment"
+  ],
+  "homepage": "https://theallseeingeyes.org",
+  "bugs": {
+    "url": "https://github.com/moltpill/fraudshield/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moltpill/fraudshield.git",
+    "directory": "packages/sdk"
+  },
+  "license": "MIT",
+  "author": "The All Seeing Eyes <support@theallseeingeyes.org>",
   "type": "module",
-  "main": "./dist/sdk.esm.js",
+  "main": "./dist/sdk.umd.js",
   "module": "./dist/sdk.esm.js",
   "browser": "./dist/sdk.min.js",
   "types": "./dist/index.d.ts",
@@ -16,13 +38,15 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "rollup -c && tsc --emitDeclarationOnly",
     "clean": "rm -rf dist",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@eyes/shared": "workspace:*"
@@ -34,5 +58,12 @@
     "tslib": "^2.6.3",
     "typescript": "^5.6.3",
     "vitest": "^3.0.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
