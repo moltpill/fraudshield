@@ -46,8 +46,8 @@ docker compose build --pull
 echo "--> Running database migrations"
 docker compose run --rm api npx prisma migrate deploy
 
-echo "--> Restarting services (zero-downtime rolling update)"
-docker compose up -d --remove-orphans
+echo "--> Restarting services (force recreate for label/middleware changes)"
+docker compose up -d --force-recreate --remove-orphans
 
 echo "--> Waiting for services to be healthy (max 120s)"
 timeout=120

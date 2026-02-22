@@ -92,7 +92,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
     chmod 600 "$ENV_FILE"
     warn "IMPORTANT: Edit ${ENV_FILE} with your real values before starting services!"
     warn "  - Set DOMAIN, POSTGRES_PASSWORD, NEXTAUTH_SECRET, ADMIN_NEXTAUTH_SECRET"
-    warn "  - Then run: cd ${REPO_DIR} && docker compose up -d"
+    warn "  - Then run: cd ${REPO_DIR} && ./scripts/deploy-hetzner.sh"
 else
     info ".env already exists, skipping."
 fi
@@ -108,6 +108,6 @@ info ""
 info "Next steps:"
 info "  1. Edit ${ENV_FILE}"
 info "  2. cd ${REPO_DIR}"
-info "  3. docker compose up -d"
+info "  3. ./scripts/deploy-hetzner.sh"
 info ""
 info "Deploy user SSH: ssh ${DEPLOY_USER}@$(hostname -I | awk '{print $1}')"

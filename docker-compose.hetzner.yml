@@ -1,0 +1,52 @@
+# docker-compose.hetzner.yml — Hetzner production overrides
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.hetzner.yml up -d --force-recreate
+#
+# This file contains production-specific overrides for Hetzner deployment.
+# The base docker-compose.yml works for both local dev and production,
+# but this file can add Hetzner-specific configurations if needed.
+
+services:
+  # Production logging configuration
+  api:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  dashboard:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  admin:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
